@@ -33,7 +33,7 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
-            this.button3 = new System.Windows.Forms.Button();
+            this.saveBtn = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -41,8 +41,6 @@
             this.onlyOneRB = new System.Windows.Forms.RadioButton();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.compressCB = new System.Windows.Forms.CheckBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -90,15 +88,15 @@
             this.textBox2.Size = new System.Drawing.Size(429, 22);
             this.textBox2.TabIndex = 4;
             // 
-            // button3
+            // saveBtn
             // 
-            this.button3.Location = new System.Drawing.Point(217, 188);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(117, 23);
-            this.button3.TabIndex = 5;
-            this.button3.Text = "Сохранить";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.saveBtn.Location = new System.Drawing.Point(313, 189);
+            this.saveBtn.Name = "saveBtn";
+            this.saveBtn.Size = new System.Drawing.Size(117, 23);
+            this.saveBtn.TabIndex = 5;
+            this.saveBtn.Text = "Сохранить";
+            this.saveBtn.UseVisualStyleBackColor = true;
+            this.saveBtn.Click += new System.EventHandler(this.saveBtn_Click);
             // 
             // label1
             // 
@@ -172,39 +170,17 @@
             this.listBox1.Size = new System.Drawing.Size(672, 500);
             this.listBox1.TabIndex = 10;
             // 
-            // compressCB
-            // 
-            this.compressCB.AutoSize = true;
-            this.compressCB.Location = new System.Drawing.Point(428, 48);
-            this.compressCB.Name = "compressCB";
-            this.compressCB.Size = new System.Drawing.Size(218, 21);
-            this.compressCB.TabIndex = 11;
-            this.compressCB.Text = "Сжать архив? (эксперимент)";
-            this.compressCB.UseVisualStyleBackColor = true;
-            // 
-            // checkBox2
-            // 
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(369, 190);
-            this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(318, 21);
-            this.checkBox2.TabIndex = 12;
-            this.checkBox2.Text = "Получить отсортированный список файлов";
-            this.checkBox2.UseVisualStyleBackColor = true;
-            // 
             // Packer_Tool_Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(704, 786);
-            this.Controls.Add(this.checkBox2);
-            this.Controls.Add(this.compressCB);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.saveBtn);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.checkBox1);
@@ -228,7 +204,7 @@
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button saveBtn;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox1;
@@ -236,7 +212,5 @@
         private System.Windows.Forms.RadioButton onlyOneRB;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.ListBox listBox1;
-        private System.Windows.Forms.CheckBox compressCB;
-        private System.Windows.Forms.CheckBox checkBox2;
     }
 }
