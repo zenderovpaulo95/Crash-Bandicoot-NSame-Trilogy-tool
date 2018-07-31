@@ -596,12 +596,9 @@ namespace CBNSTT
                         {
                             for (int j = 0; j < dirs.Length; j++)
                             {
-                                //if (dirs[j].Contains("\\" + fi[i].Name.Remove(fi[i].Name.Length - 4, 4)))
                                 string check = get_file_name(dirs[j]);
                                 if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                 {
-                                    //result = RepackArchive(fi[i].FullName, output_path + "\\" + fi[i].Name, dirs[j], compress, get_list);
-                                    //System.Threading.Thread.Sleep(100);
                                     var Thread = new System.Threading.Thread(
                                         () =>
                                         {

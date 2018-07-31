@@ -31,8 +31,9 @@ namespace CBNSTT
 
         private void FontEditBtn_Click(object sender, EventArgs e)
         {
-            FontEditorForm FontEdit = new FontEditorForm();
-            FontEdit.Show();
+            MessageBox.Show("Временно не работает. А может быть, никогда не заработает");
+            //FontEditorForm FontEdit = new FontEditorForm();
+            //FontEdit.Show();
         }
 
         private void TextEditBtn_Click(object sender, EventArgs e)
