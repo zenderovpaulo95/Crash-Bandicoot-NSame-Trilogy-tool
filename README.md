@@ -1,2 +1,2 @@
-# Crash-Bandicoot-NSAMETRIOLOGY-Tool
-Tool for modify text, music, textures and also repack pak archives.
+## Welcome to Crash Bandicoot N. Same Triology mod tool
+This tool is made for modifying text files.
