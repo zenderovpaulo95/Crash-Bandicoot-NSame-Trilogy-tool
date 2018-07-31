@@ -367,13 +367,15 @@ namespace CBNSTT
 
                 int files_off = (int)header_offset;
 
-                for (int i = 0; i < new_table.Length; i++)
+            for (int i = 0; i < new_table.Length; i++)
+            {
+                index = 0;
+
+                bool res = false;
+
+                while (!res)
                 {
-                    index = 0;
-
-                    bool res = false;
-
-                    while (!res)
+                    if (fi[index].FullName.Length < 255)
                     {
                         if (fi[index].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
                         {
@@ -399,7 +401,20 @@ namespace CBNSTT
                             return "Файл архива " + output_path + " не найден в папке!";
                         }
                     }
+                    else
+                    {
+                        //Какой же убогий костыль благодаря сраному ограничению Windows 7!
+                        br.Close();
+                        bw.Close();
+                        fs.Close();
+                        fr.Close();
+
+                        if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
+                        GC.Collect();
+                        return "Длина пути к файлу больше 255 символов. Сократите, пожалуйста, путь к ресурсам для правильной работы утилиты.";
+                    }
                 }
+            }
 
                 head.name_offset = files_off;
 
