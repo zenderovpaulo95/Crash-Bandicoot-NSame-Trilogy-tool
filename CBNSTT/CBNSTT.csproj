@@ -7,7 +7,7 @@
     <ProjectGuid>{835EE8D5-20CD-4982-B272-E68C5B2C7FFA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>CBNSTT</RootNamespace>
-    <AssemblyName>Crash Bandicoot nsame trilogy tool</AssemblyName>
+    <AssemblyName>Crash Bandicoot n.same trilogy tool</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -32,6 +32,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -143,6 +146,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
