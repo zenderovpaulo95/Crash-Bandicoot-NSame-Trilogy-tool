@@ -158,6 +158,330 @@ namespace CBNSTT
             }
         }
 
+        //Попытка вытащить архив (тестировал на Nintendo Switch)
+        public string UnpackArchive(string input_path, string dir_path)
+        {
+            int num = -1;
+            if (!Directory.Exists(dir_path)) return "Папка не найдена. Укажите другую папку для распаковки";
+            if (!File.Exists(input_path)) return "Файл не найден. Укажите правильный путь к файлу для распаковки";
+
+            FileStream fr = new FileStream(input_path, FileMode.Open);
+            BinaryReader br = new BinaryReader(fr);
+
+            try
+            {
+                HeaderStruct head = new HeaderStruct();
+                long header_offset = 0;
+                int new_head_offset = 0;
+
+                head.header = br.ReadBytes(4);
+                header_offset += 4;
+                new_head_offset += 4;
+                head.count = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.table_size = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.file_count = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+
+                head.chunks_sz = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.unknown1 = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.unknown2 = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.zero1 = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.big_chunks_count = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.small_chunks_count = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.name_offset = br.ReadInt32();
+                head.zero2 = br.ReadInt32();
+                header_offset += 8;
+                new_head_offset += 8;
+                head.name_table_sz = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+                head.one = br.ReadInt32();
+                header_offset += 4;
+                new_head_offset += 4;
+
+                head.IDs = new int[head.file_count];
+
+                int file_size = 0;
+
+                for (int i = 0; i < head.file_count; i++)
+                {
+                    head.IDs[i] = br.ReadInt32();
+                    file_size += 4;
+                }
+
+                header_offset += (4 * head.file_count);
+                new_head_offset += (4 * head.file_count);
+
+                head.file_table = new table[head.file_count];
+
+                for (int i = 0; i < head.file_count; i++)
+                {
+                    head.file_table[i].offset = br.ReadInt32();
+                    head.file_table[i].order1 = br.ReadInt16();
+                    head.file_table[i].order2 = br.ReadInt16();
+                    head.file_table[i].size = br.ReadInt32();
+                    head.file_table[i].c_size = -1; //Пригодится, если окажется, что флаг не равен -1
+                    head.file_table[i].block_offset = br.ReadInt16();
+                    head.file_table[i].compression_flag = br.ReadInt16();
+                    head.file_table[i].index = i;
+                }
+
+                header_offset += (16 * head.file_count);
+                new_head_offset += (16 * head.file_count);
+                file_size += (16 * head.file_count);
+
+                head.big_chunks_table = new byte[1];
+                if (head.big_chunks_count > 0)
+                {
+                    head.big_chunks_table = br.ReadBytes(head.big_chunks_count * 2);
+                    header_offset += head.big_chunks_count * 2;
+                }
+
+                head.small_chunks_table = new byte[1];
+                if (head.small_chunks_count > 0)
+                {
+                    head.small_chunks_table = br.ReadBytes(head.small_chunks_count);
+                    header_offset += head.small_chunks_count;
+                }
+
+                head.small_chunks_count = 0;
+                head.big_chunks_count = 0;
+                head.table_size = file_size;
+
+                int padded_off = pad_size((int)header_offset, 4);
+                br.BaseStream.Seek(padded_off, SeekOrigin.Begin);
+
+                int new_size = (int)header_offset - head.small_chunks_count - (head.big_chunks_count * 2);
+
+                //Какой-то изврат. Надо будет подумать над этим...
+                int padded_sz = pad_size(new_size, 4) - new_size;
+                byte[] tmp;
+
+                if (padded_sz > 0)
+                {
+                    tmp = new byte[padded_sz];
+                    header_offset += padded_sz;
+                }
+
+                head.unknown_data = br.ReadBytes(24);
+                new_size += 24;
+                new_head_offset += 24;
+                padded_sz = pad_size(new_head_offset, 0x800) - new_head_offset;
+
+                header_offset = pad_size(new_head_offset, 0x800);
+
+                br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
+                byte[] name_block = br.ReadBytes(head.name_table_sz);
+                int off = 0;
+                int offf = 0;
+                int counter = 0;
+
+                int index = 0;
+
+                for (int j = 0; j < head.file_count; j++)
+                {
+                    tmp = new byte[4];
+                    counter = 0;
+                    Array.Copy(name_block, off, tmp, 0, 4);
+                    off += 4;
+                    offf = BitConverter.ToInt32(tmp, 0);
+
+                    tmp = new byte[1];
+
+                    char ch = '1';
+
+                    tmp = new byte[name_block.Length - offf];
+                    Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+
+                    index = 0;
+
+                    while (index < tmp.Length)
+                    {
+                        ch = (char)tmp[index];
+
+                        if (ch == '\0')
+                        {
+                            break;
+                        }
+
+                        index++;
+                        counter++;
+                    }
+
+                    tmp = new byte[counter];
+                    Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+
+                    head.file_table[j].file_name = Encoding.ASCII.GetString(tmp);
+                    if (head.file_table[j].file_name.Contains("/")) head.file_table[j].file_name = head.file_table[j].file_name.Replace('/', '\\');
+                }
+
+                table[] new_table = new table[head.file_count];
+
+                for (int i = 0; i < head.file_table.Length; i++)
+                {
+                    new_table[i].offset = head.file_table[i].offset;
+                    new_table[i].size = head.file_table[i].size;
+                    new_table[i].c_size = head.file_table[i].c_size;
+                    new_table[i].order1 = head.file_table[i].order1;
+                    new_table[i].order2 = head.file_table[i].order2;
+                    new_table[i].block_offset = head.file_table[i].block_offset;
+                    new_table[i].compression_flag = head.file_table[i].compression_flag;
+                    new_table[i].file_name = head.file_table[i].file_name;
+                    new_table[i].index = head.file_table[i].index;
+
+                    if (head.file_table[i].size >= 0x40000 && head.big_chunks_count > 0)
+                    {
+                        int tmp_off = head.file_table[i].block_offset * 2;
+                        int tmp_sz = (pad_size(head.file_table[i].size, 0x8000) / 0x8000) + 2;
+                        head.file_table[i].big_chunks_data = new byte[tmp_sz];
+                        Array.Copy(head.big_chunks_table, tmp_off, head.file_table[i].big_chunks_data, 0, head.file_table[i].big_chunks_data.Length);
+                    }
+                    else head.file_table[i].big_chunks_data = null;
+
+                    new_table[i].big_chunks_data = head.file_table[i].big_chunks_data;
+                }
+
+
+                byte[] content;
+                int ch_size;
+                byte[] properties;
+                byte[] c_content;
+
+
+                //progressBar1.Minimum = 0;
+                //progressBar1.Maximum = new_table.Length - 1;
+
+                //if (listBox1.Items.Count > 0) listBox1.Items.Clear();
+
+                for (int j = 0; j < new_table.Length; j++)
+                {
+                    string pak_name = get_file_name(input_path);
+                    pak_name = pak_name.Remove(pak_name.IndexOf('.'), pak_name.Length - pak_name.IndexOf('.'));
+                    string dir = get_dir_path(new_table[j].file_name);
+                    //MessageBox.Show(dir_path + "\\" + pak_name + "\\" + dir);
+
+                    if (!Directory.Exists(dir_path + "\\" + pak_name + "\\" + dir)) Directory.CreateDirectory(dir_path + "\\" + pak_name + "\\" + dir);
+                    if (File.Exists(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name)) File.Delete(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name);
+
+                    if (new_table[j].compression_flag != -1)
+                    {
+                        int size = 0;
+
+                        int offset = new_table[j].offset;
+                        int def_block = 0x8000;
+
+                        FileStream fw = new FileStream(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name, FileMode.CreateNew);
+
+                        while (size != new_table[j].size)
+                        {
+                            try
+                            {
+                                br.BaseStream.Seek(offset, SeekOrigin.Begin);
+                                if (head.count == 11) ch_size = br.ReadInt16();
+                                else ch_size = br.ReadInt32();
+
+                                if (def_block > new_table[j].size - size) def_block = new_table[j].size - size;
+
+                                properties = br.ReadBytes(5);
+                                c_content = br.ReadBytes(ch_size);
+
+                                SevenZip.Compression.LZMA.Decoder decode = new SevenZip.Compression.LZMA.Decoder();
+                                decode.SetDecoderProperties(properties);
+                                MemoryStream ms = new MemoryStream(c_content);
+                                MemoryStream ms2 = new MemoryStream();
+                                decode.Code(ms, ms2, ch_size, def_block, null);
+                                content = ms2.ToArray();
+                                ms.Close();
+                                ms2.Close();
+
+                                fw.Write(content, 0, content.Length);
+
+                                if (head.count == 11) offset += pad_size(ch_size + 7, 0x800);
+                                else offset += pad_size(ch_size + 9, 0x800);
+
+                                size += def_block;
+
+                                content = null;
+                                c_content = null;
+                            }
+                            catch
+                            {
+                                if(size >= new_table[j].size)
+                                {
+                                    if (fw != null) fw.Close();
+                                    if (br != null) br.Close();
+                                    if (fr != null) fr.Close();
+                                    if (File.Exists(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name)) File.Delete(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name);
+
+                                    return "Неверный формат файла в архиве " + get_file_name(pak_name);
+                                }
+                                else
+                                {
+                                    br.BaseStream.Seek(offset, SeekOrigin.Begin);
+                                    def_block = 0x8000;
+
+                                    if (def_block > new_table[j].size - size) def_block = new_table[j].size - size;
+
+                                    content = br.ReadBytes(def_block);
+                                    fw.Write(content, 0, content.Length);
+
+                                    offset += pad_size(def_block, 0x800);
+                                    size += def_block;
+                                    content = null;
+                                }
+                            }
+                        }
+
+                        fw.Close();
+                    }
+                    else
+                    {
+                        br.BaseStream.Seek(new_table[j].offset, SeekOrigin.Begin);
+                        content = br.ReadBytes(new_table[j].size);
+
+                        FileStream fw = new FileStream(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name, FileMode.CreateNew);
+                        fw.Write(content, 0, content.Length);
+                        fw.Close();
+                        content = null;
+                    }
+
+                    //progressBar1.Value = j;
+                    //listBox1.Items.Add((j + 1) + ". " + new_table[j].file_name);
+                }
+
+                new_table = null;
+                head.Dispose();
+
+                br.Close();
+                fr.Close();
+
+                return "Всё распаковалось охуенно!";
+            }
+            catch
+            {
+                if (br != null) br.Close();
+                if (fr != null) fr.Close();
+                return "Что-то пошло не так. Последний файл был под номером " + num + 1;
+            }
+        }
+
         //Экспериментальная версия с полной пересборкой архивов
         public string RepackNew(string input_path, string output_path, string dir_path)
         {
@@ -1001,7 +1325,7 @@ namespace CBNSTT
             #endregion
         }
 
-        static public string get_file_name(string path)
+        public static string get_file_name(string path)
         {
             int len = path.Length - 1;
 
@@ -1013,6 +1337,22 @@ namespace CBNSTT
             }
 
             path = path.Remove(0, len + 1);
+
+            return path;
+        }
+
+        public static string get_dir_path(string path)
+        {
+            int len = path.Length - 1;
+
+            while (path[len] != '\\')
+            {
+                len--;
+
+                if (len < 0) return null;
+            }
+
+            path = path.Remove(len, path.Length - len);
 
             return path;
         }
@@ -1202,6 +1542,74 @@ namespace CBNSTT
                     }
                     else listBox1.Items.Add("Проверьте на наличие файлов pak или папок для пересборки архивов");
 
+                }
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            bool save_modal = checkBox1.Checked;
+
+            string output_path = textBox1.Text;
+
+            string pak_path = textBox1.Text;
+
+            string dir_path = textBox2.Text; //Папка с ресурсами
+
+            if (onlyOneRB.Checked)
+            {
+                if (File.Exists(pak_path) && Directory.Exists(dir_path))
+                {
+                    if (save_modal)
+                    {
+                        SaveFileDialog sfd = new SaveFileDialog();
+                        sfd.Filter = "PAK File | *.pak";
+
+                        if (sfd.ShowDialog() == DialogResult.OK)
+                        {
+                            output_path = sfd.FileName;
+                        }
+                    }
+
+                    //string result = RepackArchive(pak_path, output_path, textBox2.Text, compress, get_list);
+
+                    string result = UnpackArchive(pak_path, dir_path);
+
+                    MessageBox.Show(result);
+                }
+            }
+            else
+            {
+                //MessageBox.Show("Пока не работает");
+                if (Directory.Exists(pak_path) && Directory.Exists(dir_path))
+                {
+                    DirectoryInfo di = new DirectoryInfo(pak_path);
+                    FileInfo[] fi = di.GetFiles("*.pak");
+
+                    if (fi.Length > 0)
+                    {
+                        progressBar1.Minimum = 0;
+                        progressBar1.Maximum = fi.Length - 1;
+
+                        string result = "";
+
+                        for (int i = 0; i < fi.Length; i++)
+                        {
+                                    var Thread = new System.Threading.Thread(
+                                        () =>
+                                        {
+                                            result = UnpackArchive(fi[i].FullName, dir_path);
+                                        }
+                                    );
+                                    Thread.Start();
+                                    Thread.Join();
+                                    listBox1.Items.Add(result);
+
+                            progressBar1.Value = i;
+                        }
+                    }
+                    else listBox1.Items.Add("Проверьте на наличие файлов pak или папок для пересборки архивов");
+                    
                 }
             }
         }

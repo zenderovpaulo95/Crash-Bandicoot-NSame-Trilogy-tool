@@ -29,13 +29,6 @@ namespace CBNSTT
             tex_tool_form.Show();
         }
 
-        private void FontEditBtn_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Временно не работает. А может быть, никогда не заработает");
-            //FontEditorForm FontEdit = new FontEditorForm();
-            //FontEdit.Show();
-        }
-
         private void TextEditBtn_Click(object sender, EventArgs e)
         {
             TextEditForm txt_form = new TextEditForm();
@@ -46,6 +39,12 @@ namespace CBNSTT
         {
             SoundToolForm snd_frm = new SoundToolForm();
             snd_frm.Show();
+        }
+
+        private void AboutBtn_Click(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
         }
     }
 }

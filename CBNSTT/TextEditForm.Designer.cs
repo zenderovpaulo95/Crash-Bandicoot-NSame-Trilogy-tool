@@ -68,11 +68,11 @@
             // removeTextCB
             // 
             this.removeTextCB.AutoSize = true;
-            this.removeTextCB.Location = new System.Drawing.Point(348, 23);
+            this.removeTextCB.Location = new System.Drawing.Point(385, 24);
             this.removeTextCB.Name = "removeTextCB";
-            this.removeTextCB.Size = new System.Drawing.Size(358, 21);
+            this.removeTextCB.Size = new System.Drawing.Size(231, 21);
             this.removeTextCB.TabIndex = 3;
-            this.removeTextCB.Text = "Удалить текстовые файлы после импорта текста";
+            this.removeTextCB.Text = "Remove txt files after import text";
             this.removeTextCB.UseVisualStyleBackColor = true;
             // 
             // TextEditForm

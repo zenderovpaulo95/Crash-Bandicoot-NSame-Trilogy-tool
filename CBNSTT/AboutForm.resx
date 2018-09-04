@@ -117,13 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="textureMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>177, 17</value>
-  </metadata>
-  <metadata name="coordsMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>352, 17</value>
-  </metadata>
-  <metadata name="formMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
+  <data name="aboutRichTextBox.Text" xml:space="preserve">
+    <value>This tool for translating game Crash Bandicoot N.Same Triology.
+It can modify text files, change some textures (PVRTexToolCLI.exe will be needed),
+extract and repack archives.
+
+If somebody made a full reasearch of fonts, you can help me with explaining or
+you can modify my code on GitHub:
+https://github.com/pashok6798/Crash-Bandicoot-NSAMETRIOLOGY-Tool
+
+Version 0.1:
+First version. It has some problems with correctly work textures.
+Not a full english text (sometimes you can see a russian instead english).</value>
+  </data>
 </root>
