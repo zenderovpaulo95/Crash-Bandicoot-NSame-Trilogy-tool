@@ -70,11 +70,11 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(428, 12);
+            this.checkBox1.Location = new System.Drawing.Point(327, 22);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(165, 21);
+            this.checkBox1.Size = new System.Drawing.Size(170, 21);
             this.checkBox1.TabIndex = 2;
-            this.checkBox1.Text = "Сохранить отдельно";
+            this.checkBox1.Text = "Save in another folder";
             this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // textBox1
@@ -93,11 +93,11 @@
             // 
             // saveBtn
             // 
-            this.saveBtn.Location = new System.Drawing.Point(162, 192);
+            this.saveBtn.Location = new System.Drawing.Point(327, 49);
             this.saveBtn.Name = "saveBtn";
-            this.saveBtn.Size = new System.Drawing.Size(117, 23);
+            this.saveBtn.Size = new System.Drawing.Size(383, 31);
             this.saveBtn.TabIndex = 5;
-            this.saveBtn.Text = "Сохранить";
+            this.saveBtn.Text = "Rebuild package (old method. Uncompressed archives)";
             this.saveBtn.UseVisualStyleBackColor = true;
             this.saveBtn.Click += new System.EventHandler(this.saveBtn_Click);
             // 
@@ -123,22 +123,22 @@
             // 
             this.groupBox1.Controls.Add(this.fewArcRB);
             this.groupBox1.Controls.Add(this.onlyOneRB);
-            this.groupBox1.Location = new System.Drawing.Point(83, 12);
+            this.groupBox1.Location = new System.Drawing.Point(26, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(317, 57);
+            this.groupBox1.Size = new System.Drawing.Size(295, 57);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Пересобрать один архив или несколько?";
+            this.groupBox1.Text = "How much rebuild archives?";
             // 
             // fewArcRB
             // 
             this.fewArcRB.AutoSize = true;
             this.fewArcRB.Location = new System.Drawing.Point(165, 22);
             this.fewArcRB.Name = "fewArcRB";
-            this.fewArcRB.Size = new System.Drawing.Size(99, 21);
+            this.fewArcRB.Size = new System.Drawing.Size(114, 21);
             this.fewArcRB.TabIndex = 1;
             this.fewArcRB.TabStop = true;
-            this.fewArcRB.Text = "Несколько";
+            this.fewArcRB.Text = "A lot archives";
             this.fewArcRB.UseVisualStyleBackColor = true;
             // 
             // onlyOneRB
@@ -146,10 +146,10 @@
             this.onlyOneRB.AutoSize = true;
             this.onlyOneRB.Location = new System.Drawing.Point(26, 22);
             this.onlyOneRB.Name = "onlyOneRB";
-            this.onlyOneRB.Size = new System.Drawing.Size(112, 21);
+            this.onlyOneRB.Size = new System.Drawing.Size(86, 21);
             this.onlyOneRB.TabIndex = 0;
             this.onlyOneRB.TabStop = true;
-            this.onlyOneRB.Text = "Только один";
+            this.onlyOneRB.Text = "One only";
             this.onlyOneRB.UseVisualStyleBackColor = true;
             // 
             // progressBar1
@@ -158,7 +158,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(48, 231);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(607, 23);
+            this.progressBar1.Size = new System.Drawing.Size(662, 23);
             this.progressBar1.TabIndex = 9;
             // 
             // listBox1
@@ -170,26 +170,26 @@
             this.listBox1.ItemHeight = 16;
             this.listBox1.Location = new System.Drawing.Point(15, 265);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(672, 500);
+            this.listBox1.Size = new System.Drawing.Size(727, 500);
             this.listBox1.TabIndex = 10;
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(428, 45);
+            this.button3.Location = new System.Drawing.Point(69, 192);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(165, 23);
+            this.button3.Size = new System.Drawing.Size(236, 33);
             this.button3.TabIndex = 11;
-            this.button3.Text = "Тестовый репак";
+            this.button3.Text = "Rebuild package (new method)";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(348, 192);
+            this.button4.Location = new System.Drawing.Point(453, 192);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(286, 23);
+            this.button4.Size = new System.Drawing.Size(181, 33);
             this.button4.TabIndex = 12;
-            this.button4.Text = "Экспортировать архивы (тест)";
+            this.button4.Text = "Unpack archives (test)";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
@@ -197,7 +197,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(704, 786);
+            this.ClientSize = new System.Drawing.Size(759, 786);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.listBox1);

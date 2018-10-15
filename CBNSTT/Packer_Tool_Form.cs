@@ -365,17 +365,11 @@ namespace CBNSTT
                 byte[] c_content;
 
 
-                //progressBar1.Minimum = 0;
-                //progressBar1.Maximum = new_table.Length - 1;
-
-                //if (listBox1.Items.Count > 0) listBox1.Items.Clear();
-
                 for (int j = 0; j < new_table.Length; j++)
                 {
                     string pak_name = get_file_name(input_path);
                     pak_name = pak_name.Remove(pak_name.IndexOf('.'), pak_name.Length - pak_name.IndexOf('.'));
                     string dir = get_dir_path(new_table[j].file_name);
-                    //MessageBox.Show(dir_path + "\\" + pak_name + "\\" + dir);
 
                     if (!Directory.Exists(dir_path + "\\" + pak_name + "\\" + dir)) Directory.CreateDirectory(dir_path + "\\" + pak_name + "\\" + dir);
                     if (File.Exists(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name)) File.Delete(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name);
@@ -430,7 +424,7 @@ namespace CBNSTT
                                     if (fr != null) fr.Close();
                                     if (File.Exists(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name)) File.Delete(dir_path + "\\" + pak_name + "\\" + new_table[j].file_name);
 
-                                    return "Неверный формат файла в архиве " + get_file_name(pak_name);
+                                    return "Wrong archive format: " + get_file_name(pak_name);
                                 }
                                 else
                                 {
@@ -461,9 +455,6 @@ namespace CBNSTT
                         fw.Close();
                         content = null;
                     }
-
-                    //progressBar1.Value = j;
-                    //listBox1.Items.Add((j + 1) + ". " + new_table[j].file_name);
                 }
 
                 new_table = null;
@@ -472,13 +463,13 @@ namespace CBNSTT
                 br.Close();
                 fr.Close();
 
-                return "Всё распаковалось охуенно!";
+                return "File " + input_path + " successfully extracted!";
             }
             catch
             {
                 if (br != null) br.Close();
                 if (fr != null) fr.Close();
-                return "Что-то пошло не так. Последний файл был под номером " + num + 1;
+                return "Something wrong. The last file was number " + num + 1;
             }
         }
 
