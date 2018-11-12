@@ -1,8 +1,8 @@
-﻿/**********************************************************************
- *   Утилита по сборке архивов игры Crash Bandicoot N. Same Trilogy   *
- *   Особая благодарность за помощь в разборе структуры архивов:      *
- *                      Neo_Kesha и SileNTViP                         *
- **********************************************************************/
+﻿/*******************************************************
+ *     Crash Bandicoot N. Same Trilogy's pack tool     *
+ *   Special thanks for research archives' structure:  *
+ *                Neo_Kesha & SileNTViP                *
+ *******************************************************/
 
 using System;
 using System.IO;
@@ -23,46 +23,47 @@ namespace CBNSTT
         public struct table
         {
             public int offset;
-            public short order1;
+            public short order1; //I'm not sure about that var name, but if you'll resort this values it will be ordered
             public short order2;
             public int size;
-            public int c_size;              //Добавил для, возможно, более удобной сборки сжатых архивов.
-            public short block_offset;      //Смещение в таблице 1 или 2
-            public short compression_flag;  //Сжат или не сжат архив (Если значение равно 0x2000, то это LZMA сжатие)
-            public string file_name;        //Имя файла
-            public int index;               //Индексы (на всякий случай сохраню)
-            public byte[] big_chunks_data;  //Для хранения информации о количестве блоков
+            public int c_size;              //Compressed size information (for compressed archives)
+            public short block_offset;      //Offsets for either table 1 or table 2
+            public short compression_flag;  //Compression flag (if 0x2000 then this LZMA compression, else if 0xFFFF then this uncompressed format)
+            public string file_name;        //File name
+            public int index;               //Indexes (for correctly rebuild archives)
+            public byte[] big_chunks_data;  //Count block of compressed data for files more than 2 MB (or 4MB?)
         };
 
         public class HeaderStruct : IDisposable
         {
-            public byte[] header;          //IGA\x1A заголовок
-            public int count;              //Количество элементов в заголовке (должно быть 11)
-            public int table_size;         //Длина таблицы с файлами и таблицами о сжатых блоках
-            public int file_count;         //Количество файлов
-            public int chunks_sz;          //Размер одного выравненного сжатого куска (если их несколько, то они делятся на эту длину и считаются кусками)
-            public int unknown1;           //Неизвестное значение (за что оно отвечает, я так и не понял)
-            public int unknown2;           //Тоже неизвестно, за что отвечает.
-            public int zero1;              //Тут постоянно 0. Возможно, всё-таки unknown2 должен быть типа long
-            public int big_chunks_count;   //Количество элементов больших сжатых файлов
-            public int small_chunks_count; //Количество элементов маленьких сжатых файлов
-            public int name_offset;        //Смещение к таблице имени файлов
-            public int zero2;              //Странное значение. Возможно, оно тоже относится к name_offset и оно должно быть типа long
-            public int name_table_sz;      //Длина таблицы имени файлов
-            public int one;                //Это значение постоянно равно единице
+            public byte[] header;          //IGA\x1A header
+            public int count;              //Element's count in header (it must be 11 but in Nintendo Switch was 12)
+            public int table_size;         //Size of file's table and compressed blocks' table
+            public int file_count;         //Count of files
+            public int chunks_sz;          //Chunk size of one compressed block (maybe for some uncompressed blocks, too)
+            public int unknown1;           //Unknown value (I don't know what it does)
+            public int unknown2;           //Another one unknown value
+            public int zero1;              //I saw there's only 0 value. I'm not sure but maybe both unknown2 and zero1 values are long type and it must be only one value
+            public int big_chunks_count;   //Count of chunks for compressed big size files (more than 2MB or 4MB)
+            public int small_chunks_count; //Count of chunks for compressed small size files (less than 2MB or 4MB)
+            public int name_offset;        //Offset to file name's table
+            public int zero2;              //It showes only 0 but I think, it must be long type of name_offset value
+            public int name_table_sz;      //Size block with file names
+            public int one;                //This variable always shows only value 1
 
-            public int[] IDs;              //Какие-то отсортированные идентификаторы для файлов
+            public int[] IDs;              //Some kind of IDs for files
 
-            public table[] file_table;         //Структура таблицы файлов
-            public byte[] big_chunks_table;   //Массив из типа Int16 с данными о таблице сжатых блоков больших файлов
-            public byte[]  small_chunks_table; //Массив байтов для таблицы сжатых блоков маленьких файлов
+            public table[] file_table;         //File table's structure (see struct table)
+            public byte[] big_chunks_table;   //Massive bytes with short (Int16) type for big compressed archives
+            public byte[]  small_chunks_table; //Massive bytes for small compressed archives (it's too hard for research, so I compress only big files)
 
-            //Предполагаю, после таблицы small_shunks_table идёт выравнивание таблицы до размера, кратного 4...
+            //I suppose that after small_chunks_table value uses some data for padding header
 
-            public byte[] unknown_data; //Не понимаю, за что отвечает последний кусок, но он постоянно равен 0x18
+            public byte[] unknown_data; //Unknown data with 24 bytes length
 
             public HeaderStruct() { }
 
+            //Clean memory with unused data
             public void Dispose()
             {
                 header = null;
@@ -74,22 +75,24 @@ namespace CBNSTT
             }
         }
 
-        private void button1_Click(object sender, EventArgs e) //Обзор для папок к PAK файлам или выбор одного PAK файла
+        //Browse PAK file's dialog form
+        private void button1_Click(object sender, EventArgs e)
         {
+            //For only one selected archives
             if (onlyOneRB.Checked)
             {
                 OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Filter = "PAK файлы (*.pak) | *.pak";
+                ofd.Filter = "PAK files (*.pak) | *.pak";
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     textBox1.Text = ofd.FileName;
                 }
             }
-            else
+            else //For some archives
             {
                 FileFolderDialog ffd = new FileFolderDialog();
-                ffd.Dialog.Title = "Выберите папку с pak архивами";
+                ffd.Dialog.Title = "Choose a folder with pak's archives";
 
                 if(ffd.ShowDialog() == DialogResult.OK)
                 {
@@ -98,6 +101,7 @@ namespace CBNSTT
             }
         }
 
+        //Padding function (size - file size, chunks - chunk size)
         int pad_size(int size, int chunks)
         {
             if(size % chunks != 0)
@@ -112,7 +116,7 @@ namespace CBNSTT
             return size;
         }
 
-        //Пересортировка таблицы с файлами (для более удобного пересчитывания смещения файлов)
+        //Resort file table function
         public static void ResortTable(ref table[] table_resort)
         {
             for (int k = 0; k < table_resort.Length; k++)
@@ -158,18 +162,19 @@ namespace CBNSTT
             }
         }
 
-        //Попытка вытащить архив (тестировал на Nintendo Switch)
+        //Unpack archive function (tested for Nintendo Switch version)
         public string UnpackArchive(string input_path, string dir_path)
         {
             int num = -1;
-            if (!Directory.Exists(dir_path)) return "Папка не найдена. Укажите другую папку для распаковки";
-            if (!File.Exists(input_path)) return "Файл не найден. Укажите правильный путь к файлу для распаковки";
+            if (!Directory.Exists(dir_path)) return "Directory not found. Please select another extract directory path.";
+            if (!File.Exists(input_path)) return "File not found. Please select another pak file.";
 
             FileStream fr = new FileStream(input_path, FileMode.Open);
             BinaryReader br = new BinaryReader(fr);
 
             try
             {
+                //Collect header information
                 HeaderStruct head = new HeaderStruct();
                 long header_offset = 0;
                 int new_head_offset = 0;
@@ -237,7 +242,7 @@ namespace CBNSTT
                     head.file_table[i].order1 = br.ReadInt16();
                     head.file_table[i].order2 = br.ReadInt16();
                     head.file_table[i].size = br.ReadInt32();
-                    head.file_table[i].c_size = -1; //Пригодится, если окажется, что флаг не равен -1
+                    head.file_table[i].c_size = -1; //Default set value -1 for uncompressed files. If file is compressed, it changes for compressed size
                     head.file_table[i].block_offset = br.ReadInt16();
                     head.file_table[i].compression_flag = br.ReadInt16();
                     head.file_table[i].index = i;
@@ -270,7 +275,7 @@ namespace CBNSTT
 
                 int new_size = (int)header_offset - head.small_chunks_count - (head.big_chunks_count * 2);
 
-                //Какой-то изврат. Надо будет подумать над этим...
+                //Very strange method. I need rethink this method.
                 int padded_sz = pad_size(new_size, 4) - new_size;
                 byte[] tmp;
 
@@ -473,7 +478,7 @@ namespace CBNSTT
             }
         }
 
-        //Экспериментальная версия с полной пересборкой архивов
+        //Experimental repack function
         public string RepackNew(string input_path, string output_path, string dir_path)
         {
             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
@@ -486,7 +491,7 @@ namespace CBNSTT
             BinaryReader br = new BinaryReader(fr);
             BinaryWriter bw = new BinaryWriter(fs);
 
-            byte[] c_header = { 0x5D, 0x00, 0x80, 0x00, 0x00 }; //Заголовок сжатого блока
+            byte[] c_header = { 0x5D, 0x00, 0x80, 0x00, 0x00 }; //Compressed header (for PC version. For Nintendo Switch I have to think)
 
             HeaderStruct head = new HeaderStruct();
 
@@ -514,7 +519,7 @@ namespace CBNSTT
                 fr.Close();
                 File.Delete(output_path + ".tmp");
 
-                return "Количество файлов в папке не соответствует количеству файлов в архиве! Найдено " + fi.Length + ", а должно быть " + head.file_count;
+                return "Count of files in directory and archives don't fit. It must be " + head.file_count + "but found " + fi.Length + " files.";
             }
 
             head.chunks_sz = br.ReadInt32();
@@ -567,11 +572,10 @@ namespace CBNSTT
                 head.file_table[i].order1 = br.ReadInt16();
                 head.file_table[i].order2 = br.ReadInt16();
                 head.file_table[i].size = br.ReadInt32();
-                head.file_table[i].c_size = -1; //Пригодится, если окажется, что флаг не равен -1
+                head.file_table[i].c_size = -1;
                 head.file_table[i].block_offset = br.ReadInt16();
                 head.file_table[i].compression_flag = br.ReadInt16();
-                //head.file_table[i].block_offset = -1;
-                //head.file_table[i].compression_flag = -1;
+                
                 head.file_table[i].index = i;
             }
 
@@ -698,7 +702,7 @@ namespace CBNSTT
             byte[] tmp2;
             List<byte[]> tmp3 = new List<byte[]>();
             List<byte[]> tmp4 = new List<byte[]>();
-            int c_offset = 0; //Это для таблицы
+            int c_offset = 0; //Table's offset
 
                 for (int i = 0; i < new_table.Length; i++)
                 {
@@ -722,11 +726,11 @@ namespace CBNSTT
 
                                 int c_off = 0;
 
-                                int f_off = 0; //Для смещения при считывании файла
+                                int f_off = 0; //For recounting file's offset
                                 int f_size = (int)fi[index].Length;
                                 new_table[i].size = (int)fi[index].Length;
 
-                                int bl_size = 0x8000;
+                                int bl_size = 0x8000; //Default uncompressed block size
                                 short len = 0;
                                 short tmps = 0;
 
@@ -762,7 +766,7 @@ namespace CBNSTT
                                     new_table[i].c_size += tmp2.Length;
 
                                     tmp = new byte[2];
-                                    tmps = (short)((c_off / 0x800) | 0x8000); //Делим смещение и логически прибавляем 0x8000 (Надо так делать!)
+                                    tmps = (short)((c_off / 0x800) | 0x8000); //First compressed offset divides 0x800, then logically sums 0x8000 for correct value
                                     tmp = BitConverter.GetBytes(tmps);
                                     tmp3.Add(tmp);
                                     c_off += tmp2.Length;
@@ -828,7 +832,7 @@ namespace CBNSTT
                         }
                         else
                         {
-                            //Какой же убогий костыль благодаря сраному ограничению Windows 7!
+                            //Stupid Windows 7's limit. I use this silly method
                             br.Close();
                             bw.Close();
                             fs.Close();
@@ -836,7 +840,7 @@ namespace CBNSTT
 
                             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
                             GC.Collect();
-                            return "Длина пути к файлу больше 255 символов. Сократите, пожалуйста, путь к ресурсам для правильной работы утилиты.";
+                            return "File name path's length more than 255 symbols. Please trim it for correctly work.";
                         }
                     }
                 }
@@ -929,7 +933,7 @@ namespace CBNSTT
 
             while (offset != fr.Length)
             {
-                tmp = new byte[0x10000]; //Сделаю буфер считывания 64КБ
+                tmp = new byte[0x10000]; //just in case I uses buffer with 64KB
                 if (tmp.Length > fr.Length - offset) tmp = new byte[fr.Length - offset];
 
                 fr.Read(tmp, 0, tmp.Length);
@@ -950,7 +954,7 @@ namespace CBNSTT
             new_table = null;
             head.Dispose();
 
-            return "Файл " + output_path + " пересобран успешно!";
+            return "File " + output_path + " successfully rebuilt!";
         }
 
         public string RepackArchive(string input_path, string output_path, string dir_path, bool compress)
@@ -992,7 +996,7 @@ namespace CBNSTT
                 fr.Close();
                 File.Delete(output_path + ".tmp");
 
-                return "Количество файлов в папке не соответствует количеству файлов в архиве! Найдено " + fi.Length + ", а должно быть " + head.file_count;
+                return "Count of files in directory and archives don't fit. It must be " + head.file_count + "but found " + fi.Length + " files.";
             }
 
                 head.chunks_sz = br.ReadInt32();
@@ -1045,7 +1049,7 @@ namespace CBNSTT
                 head.file_table[i].order1 = br.ReadInt16();
                 head.file_table[i].order2 = br.ReadInt16();
                 head.file_table[i].size = br.ReadInt32();
-                head.file_table[i].c_size = -1; //Пригодится, если окажется, что флаг не равен -1
+                head.file_table[i].c_size = -1;
                 head.file_table[i].block_offset = br.ReadInt16();
                 head.file_table[i].compression_flag = br.ReadInt16();
                 head.file_table[i].block_offset = -1;
@@ -1080,7 +1084,6 @@ namespace CBNSTT
 
             int new_size = (int)header_offset - head.small_chunks_count - (head.big_chunks_count * 2);
 
-            //Какой-то изврат. Надо будет подумать над этим...
             int padded_sz = pad_size(new_size, 4) - new_size;
             byte[] tmp;
 
@@ -1192,12 +1195,11 @@ namespace CBNSTT
 
                             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
                             GC.Collect();
-                            return "Файл архива " + output_path + " не найден в папке!";
+                            return "File of archive " + output_path + " wasn't found in this directory.";
                         }
                     }
                     else
                     {
-                        //Какой же убогий костыль благодаря сраному ограничению Windows 7!
                         br.Close();
                         bw.Close();
                         fs.Close();
@@ -1205,7 +1207,7 @@ namespace CBNSTT
 
                         if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
                         GC.Collect();
-                        return "Длина пути к файлу больше 255 символов. Сократите, пожалуйста, путь к ресурсам для правильной работы утилиты.";
+                        return "File name path's length more than 255 symbols. Please trim it for correctly work.";
                     }
                 }
             }
@@ -1226,7 +1228,7 @@ namespace CBNSTT
                     }
                 }
 
-                //Запись данных в файл
+                //Writing recieved data into file
                 bw.Write(head.header);
                 bw.Write(head.count);
                 bw.Write(head.table_size);
@@ -1312,7 +1314,7 @@ namespace CBNSTT
 
                 GC.Collect();
 
-                return "Файл " + output_path + " пересобран успешно!" + info;
+                return "File " + output_path + " successfully rebuilt." + info;
             #endregion
         }
 
@@ -1348,7 +1350,7 @@ namespace CBNSTT
             return path;
         }
 
-        private void button2_Click(object sender, EventArgs e) //Выбор папки с с ресурсами
+        private void button2_Click(object sender, EventArgs e) //Browse folder with resources
         {
             FileFolderDialog fbd = new FileFolderDialog();
 
@@ -1366,7 +1368,7 @@ namespace CBNSTT
 
             string pak_path = textBox1.Text; 
 
-            string dir_path = textBox2.Text; //Папка с ресурсами
+            string dir_path = textBox2.Text; //Resource's folder
 
             if (onlyOneRB.Checked)
             {
@@ -1375,15 +1377,13 @@ namespace CBNSTT
                     if (save_modal)
                     {
                         SaveFileDialog sfd = new SaveFileDialog();
-                        sfd.Filter = "PAK File | *.pak";
+                        sfd.Filter = "PAK file | *.pak";
 
                         if (sfd.ShowDialog() == DialogResult.OK)
                         {
                             output_path = sfd.FileName;
                         }
                     }
-
-                    //string result = RepackArchive(pak_path, output_path, textBox2.Text, compress, get_list);
 
                     string result = RepackArchive(pak_path, output_path, dir_path, false);
 
@@ -1397,7 +1397,7 @@ namespace CBNSTT
                     if(save_modal)
                     {
                         FileFolderDialog ffd = new FileFolderDialog();
-                        ffd.Dialog.Title = "Укажите папку для пересобранных архивов";
+                        ffd.Dialog.Title = "Please select rebuild folder";
 
                         if(ffd.ShowDialog() == DialogResult.OK)
                         {
@@ -1439,7 +1439,7 @@ namespace CBNSTT
                             progressBar1.Value = i;
                         }
                     }
-                    else listBox1.Items.Add("Проверьте на наличие файлов pak или папок для пересборки архивов");
+                    else listBox1.Items.Add("Please check pak files or rebuild's folders.");
                     
                 }
             }           
@@ -1458,7 +1458,7 @@ namespace CBNSTT
 
             string pak_path = textBox1.Text;
 
-            string dir_path = textBox2.Text; //Папка с ресурсами
+            string dir_path = textBox2.Text;
 
             if (onlyOneRB.Checked)
             {
@@ -1467,15 +1467,13 @@ namespace CBNSTT
                     if (save_modal)
                     {
                         SaveFileDialog sfd = new SaveFileDialog();
-                        sfd.Filter = "PAK File | *.pak";
+                        sfd.Filter = "PAK file | *.pak";
 
                         if (sfd.ShowDialog() == DialogResult.OK)
                         {
                             output_path = sfd.FileName;
                         }
                     }
-
-                    //string result = RepackArchive(pak_path, output_path, textBox2.Text, compress, get_list);
 
                     string result = RepackNew(pak_path, output_path, dir_path);
 
@@ -1489,7 +1487,7 @@ namespace CBNSTT
                     if (save_modal)
                     {
                         FileFolderDialog ffd = new FileFolderDialog();
-                        ffd.Dialog.Title = "Укажите папку для пересобранных архивов";
+                        ffd.Dialog.Title = "Please select folder with rebuilt archives";
 
                         if (ffd.ShowDialog() == DialogResult.OK)
                         {
@@ -1531,7 +1529,7 @@ namespace CBNSTT
                             progressBar1.Value = i;
                         }
                     }
-                    else listBox1.Items.Add("Проверьте на наличие файлов pak или папок для пересборки архивов");
+                    else listBox1.Items.Add("Please check pak files or rebuild's folders.");
 
                 }
             }
@@ -1545,7 +1543,7 @@ namespace CBNSTT
 
             string pak_path = textBox1.Text;
 
-            string dir_path = textBox2.Text; //Папка с ресурсами
+            string dir_path = textBox2.Text;
 
             if (onlyOneRB.Checked)
             {
@@ -1554,15 +1552,13 @@ namespace CBNSTT
                     if (save_modal)
                     {
                         SaveFileDialog sfd = new SaveFileDialog();
-                        sfd.Filter = "PAK File | *.pak";
+                        sfd.Filter = "PAK file | *.pak";
 
                         if (sfd.ShowDialog() == DialogResult.OK)
                         {
                             output_path = sfd.FileName;
                         }
                     }
-
-                    //string result = RepackArchive(pak_path, output_path, textBox2.Text, compress, get_list);
 
                     string result = UnpackArchive(pak_path, dir_path);
 
@@ -1571,7 +1567,6 @@ namespace CBNSTT
             }
             else
             {
-                //MessageBox.Show("Пока не работает");
                 if (Directory.Exists(pak_path) && Directory.Exists(dir_path))
                 {
                     DirectoryInfo di = new DirectoryInfo(pak_path);
@@ -1599,8 +1594,7 @@ namespace CBNSTT
                             progressBar1.Value = i;
                         }
                     }
-                    else listBox1.Items.Add("Проверьте на наличие файлов pak или папок для пересборки архивов");
-                    
+                    else listBox1.Items.Add("Please check pak files or rebuild's folders.");
                 }
             }
         }

@@ -20,9 +20,9 @@ namespace CBNSTT
 
         public class FileStruct : IDisposable
         {
-            public byte[] head_pad; //Заголовок + выравнивание
-            public byte[] end_block; //Для последнего блока
-            public List<byte[]> sub_blocks; //Подблоки в среднем блоке
+            public byte[] head_pad; //Header with padded block
+            public byte[] end_block; //last block (it must be 3 blocks)
+            public List<byte[]> sub_blocks; //Subblocks in second block
 
             public FileStruct() { }
             public FileStruct(byte[] _head_pad, byte[] _end_block, List<byte[]> _sub_blocks)
@@ -67,19 +67,18 @@ namespace CBNSTT
 
         private void TextWorker(string full_file_name, string file_name, bool write, bool remove_txt)
         {
-            int count = 0; //Для первого блока выделяется количество подблоков
+            int count = 0; //Subblocks from first blocks
             int[] offsets = new int[2];
             int[] sizes = new int[2];
 
-            int str_count = 0; //Количество строк в блоке TSTR
-            int str_size = 0; //Длина строк
-            int size = 0; //Для длины блоков
+            int str_count = 0; //Count of strings in TSTR block
+            int str_size = 0; //Strings' length
+            int size = 0; //TSTR block's length
 
-            string[] strs; //Массив строк
-            int offset = 16; //Смещение для пробега по файлу lng
-                             //(потом, наверное, буду использовать для пробега по блоку TSTR после считывания строки)
+            string[] strs; //Strings' massive
+            int offset = 16; //Default string offset in lng file
 
-            byte[] tmp;      //"Буфер" для записи некоторых данных
+            byte[] tmp;      //Buffer
 
             offset = 16;
             byte[] file = File.ReadAllBytes(full_file_name);
@@ -116,12 +115,10 @@ namespace CBNSTT
 
             for (int k = 0; k < count; k++)
             {
-                //Считываю длину блока
                 tmp = new byte[4];
                 Array.Copy(file, offsets[0] + offset + 8, tmp, 0, tmp.Length);
                 size = BitConverter.ToInt32(tmp, 0);
 
-                //Записываю сам блок
                 tmp = new byte[size];
                 Array.Copy(file, offsets[0] + offset, tmp, 0, tmp.Length);
                 file_struct.sub_blocks.Add(tmp);
@@ -147,7 +144,6 @@ namespace CBNSTT
 
                 if (strs[k].Contains("\r\n")) strs[k] = strs[k].Replace("\r\n", "</br>");
                 else if (strs[k].Contains("\n")) strs[k] = strs[k].Replace("\n", "</n>");
-                //else if (strs[k].Contains("\n")) strs[k] = strs[k].Replace("\n", "\\n");
 
                 offset += pad_size(str_size, 2);
             }
@@ -170,7 +166,7 @@ namespace CBNSTT
 
                     file_struct.Dispose();
 
-                    listBox1.Items.Add("Файл " + file_name + " успешно экспортирован!");
+                    listBox1.Items.Add("File " + file_name + " successfully extracted!");
                 }
             }
             else
@@ -205,7 +201,6 @@ namespace CBNSTT
                                     if (strs[k].Contains("</n>")) strs[k] = strs[k].Replace("</n>", "\n");
                                     else strs[k] = strs[k].Replace("<n>", "\n");
                                 }
-                                //else if (strs[k].Contains("\\n")) strs[k] = strs[k].Replace("\\n", "\n");
 
                                 tmp = Encoding.UTF8.GetBytes(strs[k] + "\0");
                                 size = pad_size(tmp.Length, 2);
@@ -284,11 +279,11 @@ namespace CBNSTT
 
                             file_struct.Dispose();
                             GC.Collect();
-                            listBox1.Items.Add("Файл " + file_name + " успешно модифицирован!");
+                            listBox1.Items.Add("File " + file_name + " successfully modded!");
 
                             if (remove_txt) File.Delete(full_file_name.ToLower().Replace(".lng", ".txt"));
                         }
-                        else listBox1.Items.Add("Количество строк в файле " + file_name + " не соотвествуют количуству строк в текстовом файле!");
+                        else listBox1.Items.Add("Count of strings in file " + file_name + " doesn't fit count of strings in text file!");
                     }
                 }
             }

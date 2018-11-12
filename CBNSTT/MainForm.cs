@@ -17,30 +17,35 @@ namespace CBNSTT
             InitializeComponent();
         }
 
+        //call form for work with pak files
         private void PackerBtn_Click(object sender, EventArgs e)
         {
             Packer_Tool_Form pak_form = new Packer_Tool_Form();
             pak_form.Show();
         }
 
+        //Work with textures form
         private void TextureBtn_Click(object sender, EventArgs e)
         {
             TextureToolForm tex_tool_form = new TextureToolForm();
             tex_tool_form.Show();
         }
 
+        //Work with modify text files
         private void TextEditBtn_Click(object sender, EventArgs e)
         {
             TextEditForm txt_form = new TextEditForm();
             txt_form.Show();
         }
 
+        //Work with sound form (experimental. Maybe I'll remove this form)
         private void sndBtn_Click(object sender, EventArgs e)
         {
             SoundToolForm snd_frm = new SoundToolForm();
             snd_frm.Show();
         }
 
+        //Call "about tool" form
         private void AboutBtn_Click(object sender, EventArgs e)
         {
             AboutForm about = new AboutForm();

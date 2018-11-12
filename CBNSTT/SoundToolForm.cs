@@ -67,9 +67,8 @@ namespace CBNSTT
 
                                     File.WriteAllBytes(new_path_name, content);
 
-                                    listBox1.Items.Add("Файл " + fi[i].Name + " успешно извлечён!");
+                                    listBox1.Items.Add("File " + fi[i].Name + " successfully extracted!");
                                 }
-                                //else listBox1.Items.Add("Файл " + fi[i].Name + " не поддерживается утилитой");
                                 content = null;
                             }
                             catch(Exception ex)
@@ -77,7 +76,7 @@ namespace CBNSTT
                                 string err_str = ex.Message + "\r\n";
 
                                 File.WriteAllText(Application.StartupPath + "error.log", err_str);
-                                listBox1.Items.Add("Произошла ошибка. Отчёт записан в файл " + Application.StartupPath + "error.log");
+                                listBox1.Items.Add("Error's report file in " + Application.StartupPath + "error.log");
                             }
                         }
                         else if(fi[i].Extension == ".snd")
@@ -104,9 +103,9 @@ namespace CBNSTT
                                     content = null;
                                     header = null;
 
-                                    listBox1.Items.Add("Файл " + fi[i].Name + " успешно извлечён!");
+                                    listBox1.Items.Add("File " + fi[i].Name + " successfully extracted!");
                                 }
-                                else listBox1.Items.Add("Неизвестный формат файла " + fi[i].Name);
+                                else listBox1.Items.Add("Unknown file's format " + fi[i].Name);
 
                                 br.Close();
                                 fs.Close();
@@ -116,7 +115,7 @@ namespace CBNSTT
                                 string err_str = ex.Message + "\r\n";
 
                                 File.WriteAllText(Application.StartupPath + "error.log", err_str);
-                                listBox1.Items.Add("Произошла ошибка. Отчёт записан в файл " + Application.StartupPath + "error.log");
+                                listBox1.Items.Add("Error's report in file " + Application.StartupPath + "error.log");
                             }
                         }
                     }
@@ -178,9 +177,9 @@ namespace CBNSTT
 
                                     File.WriteAllBytes(fi[i].FullName, igz_Content);
 
-                                    listBox1.Items.Add("Файл " + fi[i].Name + " успешно модифицирован");
+                                    listBox1.Items.Add("File " + fi[i].Name + " successfully modded");
                                 }
-                                else listBox1.Items.Add("Длина файла " + fi[i].Name + " не соответсвует размеру " + fi[i + 1].Name);
+                                else listBox1.Items.Add("Length of file " + fi[i].Name + " doesn't fit length of file " + fi[i + 1].Name);
                             }
                             else if((fi[i].Extension == ".mp2" && fi[i + 1].Extension == ".snd")
                                 && (RemoveExtension(fi[i].Name, ".mp2") == RemoveExtension(fi[i + 1].Name, ".snd")))
@@ -188,7 +187,7 @@ namespace CBNSTT
                                 byte[] mp2_content = File.ReadAllBytes(fi[i].FullName);
                                 byte[] snd_content = File.ReadAllBytes(fi[i + 1].FullName);
 
-                                if(snd_content.Length - 128 == mp2_content.Length) //Пока что так оставлю. Если разберусь окончательно с FSB заголовком, допилю программу.
+                                if(snd_content.Length - 128 == mp2_content.Length) //Temporary solution.
                                 {
                                     Array.Copy(mp2_content, 0, snd_content, 128, mp2_content.Length);
                                     if (File.Exists(fi[i + 1].FullName)) File.Delete(fi[i + 1].FullName);
@@ -197,7 +196,7 @@ namespace CBNSTT
                                     mp2_content = null;
                                     snd_content = null;
 
-                                    listBox1.Items.Add("Файл " + fi[i + 1].Name + " успешно модифицирован!");
+                                    listBox1.Items.Add("File " + fi[i + 1].Name + " successfully modded.");
                                 }
                             }
                         }
