@@ -104,20 +104,20 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(94, 100);
+            this.label1.Location = new System.Drawing.Point(61, 100);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(96, 17);
+            this.label1.Size = new System.Drawing.Size(138, 17);
             this.label1.TabIndex = 6;
-            this.label1.Text = "Путь к файлу";
+            this.label1.Text = "PAK (or PAKS) path:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 151);
+            this.label2.Location = new System.Drawing.Point(66, 154);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(178, 17);
+            this.label2.Size = new System.Drawing.Size(129, 17);
             this.label2.TabIndex = 7;
-            this.label2.Text = "Путь к папке с ресурсами";
+            this.label2.Text = "Source folder path:";
             // 
             // groupBox1
             // 
@@ -168,14 +168,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBox1.FormattingEnabled = true;
             this.listBox1.ItemHeight = 16;
-            this.listBox1.Location = new System.Drawing.Point(15, 265);
+            this.listBox1.Location = new System.Drawing.Point(15, 276);
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(727, 500);
             this.listBox1.TabIndex = 10;
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(69, 192);
+            this.button3.Location = new System.Drawing.Point(69, 179);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(236, 33);
             this.button3.TabIndex = 11;
@@ -185,7 +185,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(453, 192);
+            this.button4.Location = new System.Drawing.Point(453, 179);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(181, 33);
             this.button4.TabIndex = 12;
@@ -211,6 +211,7 @@
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Packer_Tool_Form";
