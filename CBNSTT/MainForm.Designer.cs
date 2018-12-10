@@ -102,6 +102,7 @@
             this.MinimizeBox = false;
             this.Name = "MainForm";
             this.Text = "Crash Bandicoot Tool";
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);
 
         }

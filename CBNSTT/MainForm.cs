@@ -51,5 +51,10 @@ namespace CBNSTT
             AboutForm about = new AboutForm();
             about.Show();
         }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

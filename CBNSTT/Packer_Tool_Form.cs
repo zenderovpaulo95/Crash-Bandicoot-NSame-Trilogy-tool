@@ -474,7 +474,7 @@ namespace CBNSTT
             {
                 if (br != null) br.Close();
                 if (fr != null) fr.Close();
-                return "Something wrong. The last file was number " + num + 1;
+                return "Something wrong. The last file was number " + (num + 1).ToString();
             }
         }
 
@@ -732,7 +732,10 @@ namespace CBNSTT
 
                                 int bl_size = 0x8000; //Default uncompressed block size
                                 short len = 0;
+                                int len_int32 = 0; //Nintendo Switch
                                 short tmps = 0;
+                                int pos = 4;
+                                int plus = 9;
 
                                 if (tmp3.Count > 0) tmp3.Clear();
 
@@ -757,12 +760,31 @@ namespace CBNSTT
 
                                     tmp = ms2.ToArray();
                                     len = (short)tmp.Length;
-                                    tmp2 = new byte[pad_size(tmp.Length + 7, 0x800)];
-                                    Array.Copy(c_header, 0, tmp2, 2, c_header.Length);
-                                    Array.Copy(tmp, 0, tmp2, 7, tmp.Length);
-                                    tmp = new byte[2];
-                                    tmp = BitConverter.GetBytes(len);
-                                    Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    len_int32 = tmp.Length;
+
+                                    if (head.count == 11)
+                                    {
+                                        pos = 2;
+                                        plus = 7;
+                                    }
+
+                                    tmp2 = new byte[pad_size(tmp.Length + plus, 0x800)];
+                                    Array.Copy(c_header, 0, tmp2, pos, c_header.Length);
+                                    Array.Copy(tmp, 0, tmp2, plus, tmp.Length);
+
+                                    if (head.count == 11)
+                                    {
+                                        tmp = new byte[2];
+                                        tmp = BitConverter.GetBytes(len);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+                                    else
+                                    {
+                                        tmp = new byte[4];
+                                        tmp = BitConverter.GetBytes(len_int32);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+
                                     new_table[i].c_size += tmp2.Length;
 
                                     tmp = new byte[2];

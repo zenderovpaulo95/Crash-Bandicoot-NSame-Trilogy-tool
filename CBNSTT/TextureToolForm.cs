@@ -179,9 +179,11 @@ namespace CBNSTT
                                         tmp = BitConverter.GetBytes(mips);
                                         Array.Copy(tmp, 0, header, 44, tmp.Length);
 
-                                        if (File.Exists(fi[i].FullName.Replace(".igz", ".pvr"))) File.Delete(fi[i].FullName.Replace(".igz", ".pvr")); //Чтобы прога из-за такой тупости не упала
+                                        string pvr_path = fi[i].FullName.Remove(fi[i].FullName.Length - 3, 3) + "pvr";
 
-                                        FileStream fw = new FileStream(fi[i].FullName.Replace(".igz", ".pvr"), FileMode.CreateNew);
+                                        if (File.Exists(pvr_path)) File.Delete(pvr_path); //Чтобы прога из-за такой тупости не упала
+
+                                        FileStream fw = new FileStream(pvr_path, FileMode.CreateNew);
                                         fw.Write(header, 0, header.Length);
                                         fw.Write(content, 0, content.Length);
                                         fw.Close();
