@@ -85,7 +85,6 @@
             this.Controls.Add(this.ImportBtn);
             this.Controls.Add(this.ExportBtn);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "TextEditForm";
             this.Text = "Text editor";
