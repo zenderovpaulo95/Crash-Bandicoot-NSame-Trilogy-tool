@@ -95,7 +95,7 @@ namespace CBNSTT
                             BinaryReader br = new BinaryReader(fs);
                             byte[] header = br.ReadBytes(4);
 
-                            if (ASCIIEncoding.ASCII.GetString(header) != "\x01ZGI") listBox1.Items.Add("Файл " + fi[i].Name + " не поддерживается. Убедитесь, что этот файл является текстурой");
+                            if (ASCIIEncoding.ASCII.GetString(header) != "\x01ZGI") listBox1.Items.Add("File " + fi[i].Name + " doesn't support. Make sure this file for texture format.");
                             else
                             {
                                 br.BaseStream.Seek(16, SeekOrigin.Begin);
@@ -129,7 +129,7 @@ namespace CBNSTT
                                         if(Encoding.ASCII.GetString(header) == "EXID")
                                         {
                                             br.BaseStream.Seek(8, SeekOrigin.Current);
-                                            int block_off = br.ReadInt32() - 16; //Чтобы правильно сдвинулся к коду пиксельного формата
+                                            int block_off = br.ReadInt32() - 16; //For correct offset to pixel format
                                             br.BaseStream.Seek(block_off, SeekOrigin.Current);
                                             code = br.ReadBytes(4);
 
@@ -191,7 +191,7 @@ namespace CBNSTT
                                         if (UseTool)
                                         {
                                             string path = GetFilePath(fi[i].FullName);
-                                            string file_name = fi[i].Name;//GetFileName(fi[i].FullName);
+                                            string file_name = fi[i].Name;
 
                                             if (File.Exists(path + "\\tmp" + i.ToString() + ".pvr")) File.Delete(path + "\\tmp" + i.ToString() + ".pvr");
                                             FileStream pvr = new FileStream(path + "\\tmp" + i.ToString() + ".pvr", FileMode.CreateNew);
@@ -207,12 +207,12 @@ namespace CBNSTT
                                             arg += "del \"" + fi[i].Directory + "\\tmp" + i + ".pvr\"\r\n";
                                             arg += "ren \"" + fi[i].Directory + "\\tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
                                         }
-                                        else listBox1.Items.Add("Файл " + fi[i].Name + " экспортирован успешно");
+                                        else listBox1.Items.Add("File " + fi[i].Name + " successfully exported");
 
                                         header = null;
                                         content = null;
                                     }
-                                    else listBox1.Items.Add("Формат текстуры у файла " + fi[i].Name + " не поддерживается программой.");
+                                    else listBox1.Items.Add("Texture format of file " + fi[i].Name + " doesn't support tool");
 
                                     #region Рабочий код
                                     /*br.BaseStream.Seek(offsets[0] + 8, SeekOrigin.Begin);
@@ -317,7 +317,7 @@ namespace CBNSTT
                                     else listBox1.Items.Add("Формат данной текстуры " + fi[i].Name + " не был найден!");*/
 #endregion
                                 }
-                                else listBox1.Items.Add("Неизвестный формат. Пришлите файл " + fi[i].Name);
+                                else listBox1.Items.Add("Unknown format. Please send file " + fi[i].Name);
                             }
 
                             br.Close();
@@ -338,11 +338,11 @@ namespace CBNSTT
                             exec.Start();
                             exec.WaitForExit();
 
-                            listBox1.Items.Add("Файлы вытащились и конвертировались в удобный формат");
+                            listBox1.Items.Add("File(s) extracted and converted into png format");
 
                         }
                     }
-                    else listBox1.Items.Add("Не найдены файлы igz формата");
+                    else listBox1.Items.Add("Not found igz files");
                 }
             }
             catch(Exception ex)
@@ -362,8 +362,8 @@ namespace CBNSTT
             /*try
             {*/
             FileFolderDialog fbd = new FileFolderDialog();
-            
-               // fbd.ShowNewFolderButton = false;
+
+            // fbd.ShowNewFolderButton = false;
 
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
@@ -394,19 +394,28 @@ namespace CBNSTT
 
                     if (!UseTool && importfi[0].Extension == ".png")
                     {
-                        listBox1.Items.Add("Нужна программа для конвертирования png файлов в pvr!");
+                        listBox1.Items.Add("Need a PVRTexTool for convert png files into pvr!");
                         goto fail;
                     }
 
                         string arg = "";
 
-                        for (int i = 0; i < fi.Length; i++)
+                for (int o = 0; o < importfi.Length; o++)
+                {
+                    for (int i = 0; i < fi.Length; i++)
+                    {
+                        if (importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) == fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4))
                         {
                             FileStream fs = new FileStream(fi[i].FullName, FileMode.Open);
                             BinaryReader br = new BinaryReader(fs);
                             byte[] header = br.ReadBytes(4);
 
-                            if (ASCIIEncoding.ASCII.GetString(header) != "\x01ZGI") listBox1.Items.Add("Файл " + fi[i].Name + " не поддерживается. Убедитесь, что этот файл является текстурой");
+                            if (ASCIIEncoding.ASCII.GetString(header) != "\x01ZGI")
+                            {
+                                listBox1.Items.Add("File " + fi[i].Name + " doesn't support. Make sure that file is texture.");
+                                br.Close();
+                                fs.Close();
+                            }
                             else
                             {
                                 br.BaseStream.Seek(24, SeekOrigin.Begin);
@@ -474,7 +483,7 @@ namespace CBNSTT
 
                                         if (r8g8b8a8_offset == size) index = 0;
                                         if (dxt1_offset == size) index = 1;
-                                        if (dxt5_offset == size) index = 3;
+                                        if (dxt5_offset == size) index = 2;
 
                                         if (index != -1)
                                         {
@@ -483,11 +492,11 @@ namespace CBNSTT
 
                                             if (UseTool)
                                             {
-                                            //string path = GetFilePath(new_file_path);
-                                            //string file_name = GetFileName(new_file_path);
-                                            string tmp = importfi[i].DirectoryName + "\\tmp" + i + ".png";
-                                        if (File.Exists(tmp)) File.Delete(tmp);
-                                            File.Move(importfi[i].FullName, tmp);
+                                                //string path = GetFilePath(new_file_path);
+                                                //string file_name = GetFileName(new_file_path);
+                                                string tmp = importfi[i].DirectoryName + "\\tmp" + i + ".png";
+                                                if (File.Exists(tmp)) File.Delete(tmp);
+                                                File.Move(importfi[i].FullName, tmp);
 
                                                 arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "PVRTexToolCLI.exe\" -i \"" + tmp + "\" -o \"" + tmp.Replace(".png", ".pvr") + "\" -flip y -f " + check_format[index].format + ",UBN,lRGB -m " + mips.ToString() + "\r\n";
                                                 arg += "if exist \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\" del \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\"\r\n";
@@ -496,69 +505,74 @@ namespace CBNSTT
                                             }
                                             else
                                             {
-                                                byte[] pvr_tex = File.ReadAllBytes(importfi[i].FullName);
+                                                byte[] pvr_tex = File.ReadAllBytes(importfi[o].FullName);
                                                 byte[] tmp = new byte[8];
                                                 Array.Copy(pvr_tex, 8, tmp, 0, tmp.Length);
 
-                                            string format = "Unknown";
+                                                string format = "Unknown";
 
-                                                 switch(BitConverter.ToInt64(tmp, 0))
-                                                 {
-                                                     case 7:
-                                                       format = "BC1";
+                                                switch (BitConverter.ToInt64(tmp, 0))
+                                                {
+                                                    case 7:
+                                                        format = "BC1";
                                                         break;
 
-                                                     case 9:
-                                                       format = "BC2";
+                                                    case 9:
+                                                        format = "BC2";
                                                         break;
 
-                                                     case 11:
-                                                       format = "BC3";
+                                                    case 11:
+                                                        format = "BC3";
                                                         break;
 
-                                                     case 0x808080861626772:
+                                                    case 0x808080861626772:
                                                         format = "r8g8b8a8";
                                                         break;
-                                                 }
-
-                                            if (format != "Unknown")
-                                            {
-                                                tmp = new byte[4];
-
-                                                Array.Copy(pvr_tex, 48, tmp, 0, tmp.Length);
-
-                                                int offs = 52 + BitConverter.ToInt32(tmp, 0);
-                                                if (size == pvr_tex.Length - offs)
-                                                {
-                                                    br.BaseStream.Seek(0, SeekOrigin.Begin);
-                                                    tmp = br.ReadBytes(offsets[2]);
-                                                    if (File.Exists(fi[i].FullName)) File.Delete(fi[i].FullName);
-
-                                                    FileStream fw = new FileStream(fi[i].FullName, FileMode.CreateNew);
-                                                    fw.Write(tmp, 0, tmp.Length);
-                                                    
-                                                    tmp = new byte[size];
-                                                    Array.Copy(pvr_tex, offs, tmp, 0, tmp.Length);
-                                                    fw.Write(tmp, 0, tmp.Length);
-                                                    tmp = null;
-
-                                                    listBox1.Items.Add("Файл " + fi[i].Name + " импортирован успешно!");
                                                 }
-                                                else listBox1.Items.Add("Что-то не соответствует. Разберусь позже.");
-                                            }
-                                            else listBox1.Items.Add("Неизвестный формат PVR файла. Пришлите мне его для изучения");
-                                        }
-                                        }
-                                        else listBox1.Items.Add("Прошу, пришлите мне этот файл: " + fi[i].Name + " для проверки на правильность разбора файла");
-                                    }
-                                    else listBox1.Items.Add("Формат данной текстуры " + fi[i].Name + " не был найден!");
-                                }
-                                else listBox1.Items.Add("Неизвестный формат. Пришлите файл " + fi[i].Name);
-                            }
 
-                            br.Close();
-                            fs.Close();
+                                                if (format != "Unknown")
+                                                {
+                                                    tmp = new byte[4];
+
+                                                    Array.Copy(pvr_tex, 48, tmp, 0, tmp.Length);
+
+                                                    int offs = 52 + BitConverter.ToInt32(tmp, 0);
+                                                    if (size == pvr_tex.Length - offs)
+                                                    {
+                                                        br.BaseStream.Seek(0, SeekOrigin.Begin);
+                                                        tmp = br.ReadBytes(offsets[2]);
+
+                                                        br.Close();
+                                                        fs.Close();
+
+                                                        //TODO: Find out way for correctly close files stream...
+
+                                                        if (File.Exists(fi[i].FullName)) File.Delete(fi[i].FullName);
+
+                                                        FileStream fw = new FileStream(fi[i].FullName, FileMode.CreateNew);
+                                                        fw.Write(tmp, 0, tmp.Length);
+
+                                                        tmp = new byte[size];
+                                                        Array.Copy(pvr_tex, offs, tmp, 0, tmp.Length);
+                                                        fw.Write(tmp, 0, tmp.Length);
+                                                        tmp = null;
+
+                                                        listBox1.Items.Add("File " + fi[i].Name + " successfully imported!");
+                                                    }
+                                                    else listBox1.Items.Add("Something wrong. I'll check later.");
+                                                }
+                                                else listBox1.Items.Add("Unknown PVR file format. Please send me for research.");
+                                            }
+                                        }
+                                        else listBox1.Items.Add("Please send me this file: " + fi[i].Name + ". It needs check for correctly file format.");
+                                    }
+                                    else listBox1.Items.Add("Texture format this file " + fi[i].Name + " wasn't found.");
+                                }
+                                else listBox1.Items.Add("Unknown format. Please send me file " + fi[i].Name);
+                            }
                         }
+                    }
+                }
 
                         if (UseTool && arg != "")
                         {
@@ -574,7 +588,7 @@ namespace CBNSTT
                             exec.Start();
                             exec.WaitForExit();
 
-                        listBox1.Items.Add("Конвертация завершена. Идёт замена текстур в igz файле");
+                        listBox1.Items.Add("Convertion complete. Replacing textures in igz files...");
 
                         for(int i = 0; i < fi.Length; i++)
                         {
@@ -632,9 +646,9 @@ namespace CBNSTT
 
                             fw.Close();
                             File.Delete(path);
-                            listBox1.Items.Add("Файл " + fi[i].Name + " импортирован успешно!");
+                            listBox1.Items.Add("File " + fi[i].Name + " successfully imported.");
                         }
-                        else listBox1.Items.Add("Файл " + fi[i].Name + " не получилось импортировать, т.к. отсутствовал его PVR файл");
+                        else listBox1.Items.Add("File " + fi[i].Name + " didn't imported because pvr file doesn't exist.");
                         }
 
                         }
