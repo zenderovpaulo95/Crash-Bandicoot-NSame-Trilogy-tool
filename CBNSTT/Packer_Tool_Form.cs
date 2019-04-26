@@ -23,15 +23,16 @@ namespace CBNSTT
         public struct table
         {
             public int offset;
-            public short order1; //I'm not sure about that var name, but if you'll resort this values it will be ordered
+            public short order1;             //I'm not sure about that var name, but if you'll resort this values it will be ordered
             public short order2;
             public int size;
-            public int c_size;              //Compressed size information (for compressed archives)
-            public short block_offset;      //Offsets for either table 1 or table 2
-            public short compression_flag;  //Compression flag (if 0x2000 then this LZMA compression, else if 0xFFFF then this uncompressed format)
-            public string file_name;        //File name
-            public int index;               //Indexes (for correctly rebuild archives)
-            public byte[] big_chunks_data;  //Count block of compressed data for files more than 2 MB (or 4MB?)
+            public int c_size;               //Compressed size information (for compressed archives)
+            public short block_offset;       //Offsets for either table 1 or table 2
+            public short compression_flag;   //Compression flag (if 0x2000 then this LZMA compression, else if 0xFFFF then this uncompressed format)
+            public string file_name;         //File name
+            public int index;                //Indexes (for correctly rebuild archives)
+            public byte[] big_chunks_data;   //Count block of compressed data for files more than 2MB (or 4MB?)
+            public byte[] small_chunks_data; //Count block of compressed data for files less than 2MB (or 4MB?)
         };
 
         public class HeaderStruct : IDisposable
@@ -54,7 +55,7 @@ namespace CBNSTT
             public int[] IDs;              //Some kind of IDs for files
 
             public table[] file_table;         //File table's structure (see struct table)
-            public byte[] big_chunks_table;   //Massive bytes with short (Int16) type for big compressed archives
+            public byte[] big_chunks_table;    //Massive bytes with short (Int16) type for big compressed archives
             public byte[]  small_chunks_table; //Massive bytes for small compressed archives (it's too hard for research, so I compress only big files)
 
             //I suppose that after small_chunks_table value uses some data for padding header
@@ -422,6 +423,7 @@ namespace CBNSTT
                             }
                             catch
                             {
+                                int off_tmp = new_table[j].offset;
                                 if(size >= new_table[j].size)
                                 {
                                     if (fw != null) fw.Close();
@@ -689,7 +691,33 @@ namespace CBNSTT
                     head.file_table[i].big_chunks_data = new byte[tmp_sz];
                     Array.Copy(head.big_chunks_table, tmp_off, head.file_table[i].big_chunks_data, 0, head.file_table[i].big_chunks_data.Length);
                 }
-                else head.file_table[i].big_chunks_data = null;
+                else if (head.file_table[i].size < 0x40000 && head.small_chunks_count > 0)
+                {
+                    List<byte> tmp_data = new List<byte>();
+                    byte[] tmp_byte = new byte[2];
+                    int tmp_off_s = head.file_table[i].block_offset;
+
+                    Array.Copy(head.small_chunks_table, tmp_off_s, tmp_byte, 0, 1);
+                    tmp_data.Add(tmp_byte[0]);
+                    tmp_off_s++;
+
+                    while(true)
+                    {
+                        tmp_byte = new byte[2];
+                        Array.Copy(head.small_chunks_table, tmp_off_s, tmp_byte, 0, 1);
+                        if (((short)(BitConverter.ToInt16(tmp_byte, 0) ^ 0x80) == 0) || (tmp_off_s >= head.small_chunks_table.Length)) break;
+                        tmp_data.Add(tmp_byte[0]);
+                    }
+
+                    head.file_table[i].small_chunks_data = tmp_data.ToArray();
+                    tmp_data.Clear();
+                    tmp_byte = null;
+                }
+                else
+                {
+                    head.file_table[i].big_chunks_data = null;
+                    head.file_table[i].small_chunks_data = null;
+                }
 
                 new_table[i].big_chunks_data = head.file_table[i].big_chunks_data;
             }
@@ -702,7 +730,9 @@ namespace CBNSTT
             byte[] tmp2;
             List<byte[]> tmp3 = new List<byte[]>();
             List<byte[]> tmp4 = new List<byte[]>();
-            int c_offset = 0; //Table's offset
+            List<byte[]> tmp5 = new List<byte[]>();
+            int c_offset = 0; //Table's offset big data
+            int c_offset_small = 0; //Table's offset small data
 
                 for (int i = 0; i < new_table.Length; i++)
                 {
@@ -719,7 +749,8 @@ namespace CBNSTT
                                 new_table[i].offset = offset;
                                 new_table[i].size = (int)fi[index].Length;
 
-                            if (new_table[i].size >= 0x40000 && new_table[i].compression_flag != -1)
+                            //if (new_table[i].size >= 0x40000 && new_table[i].compression_flag != -1)
+                            if (fi[index].Length >= 0x40000 && new_table[i].compression_flag != -1)
                             {
                                 count = (pad_size(new_table[i].size, 0x8000) / 0x8000) + 1;
                                 head.big_chunks_count += count;
@@ -816,6 +847,121 @@ namespace CBNSTT
                                 fcr.Close();
 
                                 tmp4.Add(tmp);
+                                offset += new_table[i].c_size;
+                            }
+                            else if(fi[index].Length < 0x40000 && new_table[i].compression_flag != -1)
+                            {
+                                int c_off = 0;
+
+                                int f_off = 0; //For recounting file's offset
+                                int f_size = (int)fi[index].Length;
+                                new_table[i].size = (int)fi[index].Length;
+
+                                int bl_size = 0x8000; //Default uncompressed block size
+                                short len = 0;
+                                int len_int32 = 0; //Nintendo Switch
+                                short tmps = 0;
+                                int pos = 4;
+                                int plus = 9;
+
+                                if (tmp3.Count > 0) tmp3.Clear();
+
+                                new_table[i].c_size = 0;
+
+                                count = 0; //Count blocks
+
+                                FileStream fcr = new FileStream(fi[index].FullName, FileMode.Open);
+
+                                tmp = new byte[2];
+                                tmps = (short)(count | 0x80); //Just logically sum 0x80 for correct value
+                                tmp = BitConverter.GetBytes(tmps);
+                                tmp3.Add(tmp);
+
+                                int sub_blocks = pad_size(f_size, 0x8000) / 0x8000;
+                                int bl_count = 1;
+
+                                while (f_off != f_size)
+                                {
+                                    bl_size = 0x8000;
+                                    if (bl_size > f_size - f_off) bl_size = f_size - f_off;
+                                    tmp = new byte[bl_size];
+                                    fcr.Read(tmp, 0, tmp.Length);
+
+                                    f_off += tmp.Length;
+
+                                    SevenZip.Compression.LZMA.Encoder encode = new SevenZip.Compression.LZMA.Encoder();
+                                    MemoryStream ms = new MemoryStream(tmp);
+                                    MemoryStream ms2 = new MemoryStream();
+                                    encode.Code(ms, ms2, -1, -1, null);
+                                    ms2.Close();
+                                    ms.Close();
+
+                                    tmp = ms2.ToArray();
+                                    len = (short)tmp.Length;
+                                    len_int32 = tmp.Length;
+
+                                    if (head.count == 11)
+                                    {
+                                        pos = 2;
+                                        plus = 7;
+                                    }
+
+                                    tmp2 = new byte[pad_size(tmp.Length + plus, 0x800)];
+                                    count += (short)(tmp2.Length / 0x800);
+                                    Array.Copy(c_header, 0, tmp2, pos, c_header.Length);
+                                    Array.Copy(tmp, 0, tmp2, plus, tmp.Length);
+
+                                    if (head.count == 11)
+                                    {
+                                        tmp = new byte[2];
+                                        tmp = BitConverter.GetBytes(len);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+                                    else
+                                    {
+                                        tmp = new byte[4];
+                                        tmp = BitConverter.GetBytes(len_int32);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+
+                                    new_table[i].c_size += tmp2.Length;
+
+                                    if (bl_count < sub_blocks)
+                                    {
+                                        tmp = new byte[2];
+                                        tmps = (short)(count | 0x80); //Just logically sum 0x80 for correct value
+                                        tmp = BitConverter.GetBytes(tmps);
+                                        tmp3.Add(tmp);
+                                        bl_count++;
+                                    }
+
+                                    bw.Write(tmp2, 0, tmp2.Length);
+                                    c_off += tmp2.Length;
+                                }
+
+                                //tmps = (short)(new_table[i].c_size / 0x800);
+                                tmp = new byte[2];
+                                tmp = BitConverter.GetBytes(count);
+                                tmp3.Add(tmp);
+
+                                head.small_chunks_count += tmp3.Count;
+
+                                tmp = new byte[tmp3.Count];
+
+                                new_table[i].big_chunks_data = null;
+                                new_table[i].small_chunks_data = null;
+                                new_table[i].block_offset = (short)c_offset_small;
+
+                                c_offset_small += tmp.Length;
+
+                                for (int c = 0; c < tmp3.Count; c++)
+                                {
+                                    Array.Copy(tmp3[c], 0, tmp, c, 1);
+                                }
+
+                                fcr.Close();
+
+                                tmp5.Add(tmp);
                                 offset += new_table[i].c_size;
                             }
                             else
@@ -931,14 +1077,17 @@ namespace CBNSTT
             for(int i = 0; i < tmp4.Count; i++)
             {
                 bw.Write(tmp4[i]);
-                
             }
 
-            if(head.small_chunks_table.Length > 0 && head.small_chunks_count > 0)
+            for (int i = 0; i < tmp5.Count; i++)
+            {
+                bw.Write(tmp5[i]);
+            }
+
+            /*if(head.small_chunks_table.Length > 0 && head.small_chunks_count > 0)
             {
                 bw.Write(head.small_chunks_table);
-                
-            }
+            }*/
 
             int tmp_sz2 = 56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count;
 
