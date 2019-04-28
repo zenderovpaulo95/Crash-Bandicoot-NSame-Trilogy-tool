@@ -569,6 +569,9 @@ namespace CBNSTT
                                     else listBox1.Items.Add("Texture format this file " + fi[i].Name + " wasn't found.");
                                 }
                                 else listBox1.Items.Add("Unknown format. Please send me file " + fi[i].Name);
+
+                                if (br != null) br.Close();
+                                if (fs != null) fs.Close();
                             }
                         }
                     }

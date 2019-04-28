@@ -126,6 +126,10 @@ If somebody made a full reasearch of fonts, you can help me with explaining or
 you can modify my code on GitHub:
 https://github.com/pashok6798/Crash-Bandicoot-NSAMETRIOLOGY-Tool
 
+Version 0.3:
+- Fixed import textures.
+- Now files must be compressed normally.
+
 Version 0.2:
 A little bit fixes &amp; trying translate a tool from Russian into English.
 

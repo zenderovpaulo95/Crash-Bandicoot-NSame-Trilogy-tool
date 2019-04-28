@@ -56,5 +56,11 @@ namespace CBNSTT
         {
 
         }
+
+        private void FontEdBtn_Click(object sender, EventArgs e)
+        {
+            FontEditorForm font_editor = new FontEditorForm();
+            font_editor.Show();
+        }
     }
 }
