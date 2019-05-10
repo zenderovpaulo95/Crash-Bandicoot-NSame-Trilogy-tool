@@ -1792,12 +1792,6 @@ namespace CBNSTT
 
                         int count = 0;
 
-                        if (button4.Enabled) button4.Enabled = false;
-                        if (button3.Enabled) button3.Enabled = false;
-                        if (button2.Enabled) button2.Enabled = false;
-                        if (button1.Enabled) button1.Enabled = false;
-                        if (saveBtn.Enabled) saveBtn.Enabled = false;
-
                         System.Threading.Tasks.Task.Factory.StartNew(() =>
                             System.Threading.Tasks.Parallel.For(0, fi.Length, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
                            i =>
