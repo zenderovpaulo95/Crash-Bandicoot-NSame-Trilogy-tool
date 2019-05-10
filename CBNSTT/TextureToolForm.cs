@@ -44,7 +44,7 @@ namespace CBNSTT
         {
             int len = path.Length - 1;
 
-            while(path[len] != '\\')
+            while(path[len] != MainForm.slash)
             {
                 len--;
 
@@ -60,7 +60,7 @@ namespace CBNSTT
         {
             int len = path.Length - 1;
 
-            while (path[len] != '\\')
+            while (path[len] != MainForm.slash)
             {
                 len--;
 
@@ -80,7 +80,7 @@ namespace CBNSTT
 
                 if(fbd.ShowDialog() == DialogResult.OK)
                 {
-                    bool UseTool = File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\PVRTexToolCLI.exe");
+                    bool UseTool = File.Exists(String.Format("{0}{1}PVRTexToolCLI", AppDomain.CurrentDomain.BaseDirectory, MainForm.slash));
 
                     DirectoryInfo di = new DirectoryInfo(fbd.SelectedPath);
                     FileInfo[] fi = di.GetFiles("*.igz");
@@ -193,8 +193,8 @@ namespace CBNSTT
                                             string path = GetFilePath(fi[i].FullName);
                                             string file_name = fi[i].Name;
 
-                                            if (File.Exists(path + "\\tmp" + i.ToString() + ".pvr")) File.Delete(path + "\\tmp" + i.ToString() + ".pvr");
-                                            FileStream pvr = new FileStream(path + "\\tmp" + i.ToString() + ".pvr", FileMode.CreateNew);
+                                            if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".pvr")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".pvr");
+                                            FileStream pvr = new FileStream(path + MainForm.slash + "tmp" + i.ToString() + ".pvr", FileMode.CreateNew);
                                             pvr.Write(header, 0, header.Length);
                                             pvr.Write(content, 0, content.Length);
                                             pvr.Close();
@@ -202,10 +202,10 @@ namespace CBNSTT
                                             File.Delete(fi[i].FullName.Replace(".igz", ".pvr"));
 
 
-                                            arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "\\PVRTexToolCLI.exe\" -i \"" + fi[i].Directory + "\\tmp" + i + ".pvr\" -d -f r8g8b8a8 -flip y\r\n";
-                                            arg += "del \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\"\r\n";
-                                            arg += "del \"" + fi[i].Directory + "\\tmp" + i + ".pvr\"\r\n";
-                                            arg += "ren \"" + fi[i].Directory + "\\tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
+                                            arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "PVRTexToolCLI.exe\" -i \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".pvr\" -d -f r8g8b8a8 -flip y\r\n";
+                                            arg += "del \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".Out.pvr\"\r\n";
+                                            arg += "del \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".pvr\"\r\n";
+                                            arg += "ren \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
                                         }
                                         else listBox1.Items.Add("File " + fi[i].Name + " successfully exported");
 
@@ -213,109 +213,6 @@ namespace CBNSTT
                                         content = null;
                                     }
                                     else listBox1.Items.Add("Texture format of file " + fi[i].Name + " doesn't support tool");
-
-                                    #region Рабочий код
-                                    /*br.BaseStream.Seek(offsets[0] + 8, SeekOrigin.Begin);
-
-                                    int offset = 0;
-
-                                    for (int j = 0; j < 3; j++)
-                                    {
-                                        offset = br.ReadInt32();
-                                        br.BaseStream.Seek(offset - 4, SeekOrigin.Current);
-                                    }
-
-                                    br.BaseStream.Seek(8, SeekOrigin.Current);
-
-                                    byte[] code = br.ReadBytes(4);
-
-                                    int index = -1;
-                                    
-                                        br.BaseStream.Seek(offsets[1] + 0x48, SeekOrigin.Begin);
-                                        short width = br.ReadInt16();
-                                        short height = br.ReadInt16();
-                                        short faces = br.ReadInt16(); //Faces?
-                                        short mips = br.ReadInt16();
-                                        short ar_mem = br.ReadInt16(); //Array members?
-
-                                        if (faces == 1 && ar_mem == 1)
-                                        {
-                                            int tmp_width = width;
-                                            int tmp_height = height;
-
-                                            br.BaseStream.Seek(22, SeekOrigin.Current);
-
-                                            int size = br.ReadInt32();
-
-                                            int r8g8b8a8_offset = 0, dxt1_offset = 0, dxt5_offset = 0;
-                                            
-                                            for(int m = 0; m < mips; m++)
-                                            {
-                                                r8g8b8a8_offset += (tmp_width * tmp_height * 4);
-                                                dxt1_offset += ((tmp_width * tmp_height) / 2);
-                                                dxt5_offset += (tmp_width * tmp_height);
-
-                                            //if(tmp_width / 2)
-                                            tmp_width /= 2;
-                                            tmp_height /= 2;
-
-                                            if (tmp_width == 0) tmp_width = 1;
-                                            if (tmp_height == 0) tmp_height = 1;
-                                            }
-
-                                            if (r8g8b8a8_offset == size) index = 0;
-                                            if (dxt1_offset == size) index = 1;
-                                            if (dxt5_offset == size) index = 3;
-
-                                        if(index != -1)
-                                        { 
-                                                br.BaseStream.Seek(offsets[2], SeekOrigin.Begin);
-
-                                            byte[] content = br.ReadBytes(sizes[2]);
-
-                                            byte[] head = check_format[index].header;
-                                            byte[] tmp = new byte[2];
-                                            tmp = BitConverter.GetBytes(width);
-                                            Array.Copy(tmp, 0, head, 28, tmp.Length);
-                                            tmp = new byte[2];
-                                            tmp = BitConverter.GetBytes(height);
-                                            Array.Copy(tmp, 0, head, 24, tmp.Length);
-                                            tmp = new byte[2];
-                                            tmp = BitConverter.GetBytes(mips);
-                                            Array.Copy(tmp, 0, head, 44, tmp.Length);
-
-                                            string new_file_path = fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4) + ".pvr";
-                                            if (File.Exists(new_file_path)) File.Delete(new_file_path);
-                                            FileStream fw = new FileStream(new_file_path, FileMode.CreateNew);
-                                            fw.Write(head, 0, head.Length);
-                                            fw.Write(content, 0, content.Length);
-                                            fw.Close();
-
-                                            if (UseTool)
-                                            {
-                                                string path = GetFilePath(new_file_path);
-                                                string file_name = GetFileName(new_file_path);
-
-                                                if (File.Exists(path + "\\tmp" + i.ToString() + ".pvr")) File.Delete(path + "\\tmp" + i.ToString() + ".pvr");
-                                                FileStream pvr = new FileStream(path + "\\tmp" + i.ToString() + ".pvr", FileMode.CreateNew);
-                                                pvr.Write(head, 0, head.Length);
-                                                pvr.Write(content, 0, content.Length);
-                                                pvr.Close();
-
-                                                File.Delete(new_file_path);
-
-                                                
-                                                arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "\\PVRTexToolCLI.exe\" -i \"" + fi[i].Directory + "\\tmp" + i + ".pvr\" -d -f r8g8b8a8 -flip y\r\n";
-                                                arg += "del \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\"\r\n";
-                                                arg += "del \"" + fi[i].Directory + "\\tmp" + i + ".pvr\"\r\n";
-                                                arg += "ren \"" + fi[i].Directory + "\\tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
-                                            }
-                                            else listBox1.Items.Add("Текстура извлечена в " + fi[i].Name.Remove(fi[i].Name.Length - 4, 4) + ".pvr");
-                                        }
-                                        else listBox1.Items.Add("Прошу, пришлите мне этот файл: " + fi[i].Name + " для проверки на правильность разбора файла");
-                                    }
-                                    else listBox1.Items.Add("Формат данной текстуры " + fi[i].Name + " не был найден!");*/
-#endregion
                                 }
                                 else listBox1.Items.Add("Unknown format. Please send file " + fi[i].Name);
                             }
@@ -326,10 +223,10 @@ namespace CBNSTT
 
                         if(UseTool && arg != "")
                         {
-                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat" + "\"";
-                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat", arg, Encoding.GetEncoding(866));
+                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat" + "\"";
+                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat", arg, Encoding.GetEncoding(866));
 
-                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat\"";
+                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat\"";
 
                             Process exec = new Process();
 
@@ -349,11 +246,11 @@ namespace CBNSTT
             {
                 string error_str = ex.Data + "\t" + ex.Message + "\r\n";
 
-                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\session_error.log")) File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\session_error.log");
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "session_error.log")) File.Delete(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "session_error.log");
 
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\session_error.log", error_str);
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "session_error.log", error_str);
 
-                listBox1.Items.Add("Произошла ошибка. Отчёт сохранён в файл " + AppDomain.CurrentDomain.BaseDirectory + "\\season_error.log");
+                listBox1.Items.Add("Произошла ошибка. Отчёт сохранён в файл " + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "season_error.log");
             }
         }
 
@@ -367,7 +264,7 @@ namespace CBNSTT
 
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    bool UseTool = File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\PVRTexToolCLI.exe");
+                    bool UseTool = File.Exists(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "PVRTexToolCLI");
 
                     DirectoryInfo di = new DirectoryInfo(fbd.SelectedPath);
                     FileInfo[] fi = di.GetFiles("*.igz");
@@ -494,14 +391,14 @@ namespace CBNSTT
                                             {
                                                 //string path = GetFilePath(new_file_path);
                                                 //string file_name = GetFileName(new_file_path);
-                                                string tmp = importfi[i].DirectoryName + "\\tmp" + i + ".png";
+                                                string tmp = importfi[i].DirectoryName + MainForm.slash + "tmp" + i + ".png";
                                                 if (File.Exists(tmp)) File.Delete(tmp);
                                                 File.Move(importfi[i].FullName, tmp);
 
-                                                arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "PVRTexToolCLI.exe\" -i \"" + tmp + "\" -o \"" + tmp.Replace(".png", ".pvr") + "\" -flip y -f " + check_format[index].format + ",UBN,lRGB -m " + mips.ToString() + "\r\n";
-                                                arg += "if exist \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\" del \"" + fi[i].Directory + "\\tmp" + i + ".Out.pvr\"\r\n";
-                                                arg += "ren \"" + fi[i].Directory + "\\tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
-                                                arg += "ren \"" + fi[i].Directory + "\\tmp" + i + ".pvr\" \"" + fi[i].Name.Replace(".igz", ".pvr") + "\"\r\n";
+                                                arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "PVRTexToolCLI\" -i \"" + tmp + "\" -o \"" + tmp.Replace(".png", ".pvr") + "\" -flip y -f " + check_format[index].format + ",UBN,lRGB -m " + mips.ToString() + "\r\n";
+                                                arg += "if exist \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".Out.pvr\" del \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".Out.pvr\"\r\n";
+                                                arg += "ren \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
+                                                arg += "ren \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".pvr\" \"" + fi[i].Name.Replace(".igz", ".pvr") + "\"\r\n";
                                             }
                                             else
                                             {
@@ -579,10 +476,10 @@ namespace CBNSTT
 
                         if (UseTool && arg != "")
                         {
-                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat" + "\"";
-                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat", arg, Encoding.GetEncoding(866));
+                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat" + "\"";
+                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat", arg, Encoding.GetEncoding(866));
 
-                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + "\\batnik.bat\"";
+                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat\"";
 
                             Process exec = new Process();
 

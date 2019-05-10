@@ -17,6 +17,8 @@ namespace CBNSTT
             InitializeComponent();
         }
 
+        public static char slash = System.IO.Path.DirectorySeparatorChar;
+
         //call form for work with pak files
         private void PackerBtn_Click(object sender, EventArgs e)
         {
