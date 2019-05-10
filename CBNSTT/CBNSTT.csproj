@@ -111,6 +111,7 @@
     <Compile Include="TextureToolForm.Designer.cs">
       <DependentUpon>TextureToolForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Threads.cs" />
     <EmbeddedResource Include="AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </EmbeddedResource>

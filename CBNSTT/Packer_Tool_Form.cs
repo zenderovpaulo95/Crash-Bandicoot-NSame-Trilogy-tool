@@ -9,12 +9,15 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Collections.Generic;
-
+using System.Threading;
+using System.ComponentModel;
 
 namespace CBNSTT
 {
     public partial class Packer_Tool_Form : Form
     {
+        string result;
+
         public Packer_Tool_Form()
         {
             InitializeComponent();
@@ -56,7 +59,7 @@ namespace CBNSTT
 
             public table[] file_table;         //File table's structure (see struct table)
             public byte[] big_chunks_table;    //Massive bytes with short (Int16) type for big compressed archives
-            public byte[]  small_chunks_table; //Massive bytes for small compressed archives (it's too hard for research, so I compress only big files)
+            public byte[] small_chunks_table; //Massive bytes for small compressed archives (it's too hard for research, so I compress only big files)
 
             //I suppose that after small_chunks_table value uses some data for padding header
 
@@ -95,7 +98,7 @@ namespace CBNSTT
                 FileFolderDialog ffd = new FileFolderDialog();
                 ffd.Dialog.Title = "Choose a folder with pak's archives";
 
-                if(ffd.ShowDialog() == DialogResult.OK)
+                if (ffd.ShowDialog() == DialogResult.OK)
                 {
                     textBox1.Text = ffd.SelectedPath;
                 }
@@ -105,9 +108,9 @@ namespace CBNSTT
         //Padding function (size - file size, chunks - chunk size)
         int pad_size(int size, int chunks)
         {
-            if(size % chunks != 0)
+            if (size % chunks != 0)
             {
-                while(size % chunks != 0)
+                while (size % chunks != 0)
                 {
                     if (size % chunks == 0) break;
                     size++;
@@ -424,7 +427,7 @@ namespace CBNSTT
                             catch
                             {
                                 int off_tmp = new_table[j].offset;
-                                if(size >= new_table[j].size)
+                                if (size >= new_table[j].size)
                                 {
                                     if (fw != null) fw.Close();
                                     if (br != null) br.Close();
@@ -438,7 +441,10 @@ namespace CBNSTT
                                     br.BaseStream.Seek(offset, SeekOrigin.Begin);
                                     def_block = 0x8000;
 
-                                    if (def_block > new_table[j].size - size) def_block = new_table[j].size - size;
+                                    if (def_block > new_table[j].size - size)
+                                    {
+                                        def_block = new_table[j].size - size;
+                                    }
 
                                     content = br.ReadBytes(def_block);
                                     fw.Write(content, 0, content.Length);
@@ -577,7 +583,7 @@ namespace CBNSTT
                 head.file_table[i].c_size = -1;
                 head.file_table[i].block_offset = br.ReadInt16();
                 head.file_table[i].compression_flag = br.ReadInt16();
-                
+
                 head.file_table[i].index = i;
             }
 
@@ -701,7 +707,7 @@ namespace CBNSTT
                     tmp_data.Add(tmp_byte[0]);
                     tmp_off_s++;
 
-                    while(true)
+                    while (true)
                     {
                         tmp_byte = new byte[2];
                         Array.Copy(head.small_chunks_table, tmp_off_s, tmp_byte, 0, 1);
@@ -734,20 +740,20 @@ namespace CBNSTT
             int c_offset = 0; //Table's offset big data
             int c_offset_small = 0; //Table's offset small data
 
-                for (int i = 0; i < new_table.Length; i++)
+            for (int i = 0; i < new_table.Length; i++)
+            {
+                index = 0;
+
+                bool res = false;
+
+                while (!res)
                 {
-                    index = 0;
-
-                    bool res = false;
-
-                    while (!res)
+                    if (fi[index].FullName.Length < 255)
                     {
-                        if (fi[index].FullName.Length < 255)
+                        if (fi[index].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
                         {
-                            if (fi[index].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
-                            {
-                                new_table[i].offset = offset;
-                                new_table[i].size = (int)fi[index].Length;
+                            new_table[i].offset = offset;
+                            new_table[i].size = (int)fi[index].Length;
 
                             //if (new_table[i].size >= 0x40000 && new_table[i].compression_flag != -1)
                             if (fi[index].Length >= 0x40000 && new_table[i].compression_flag != -1)
@@ -773,7 +779,7 @@ namespace CBNSTT
                                 new_table[i].c_size = 0;
 
                                 FileStream fcr = new FileStream(fi[index].FullName, FileMode.Open);
-                                while(f_off != f_size)
+                                while (f_off != f_size)
                                 {
                                     bl_size = 0x8000;
                                     if (bl_size > f_size - f_off) bl_size = f_size - f_off;
@@ -849,7 +855,7 @@ namespace CBNSTT
                                 tmp4.Add(tmp);
                                 offset += new_table[i].c_size;
                             }
-                            else if(fi[index].Length < 0x40000 && new_table[i].compression_flag != -1)
+                            else if (fi[index].Length < 0x40000 && new_table[i].compression_flag != -1)
                             {
                                 int c_off = 0;
 
@@ -980,27 +986,14 @@ namespace CBNSTT
 
                                 bw.Write(tmp2, 0, tmp2.Length);
                             }
-                                res = true;
-                                break;
-                            }
-
-                            index++;
-
-                            if (index >= fi.Length)
-                            {
-                                br.Close();
-                                bw.Close();
-                                fs.Close();
-                                fr.Close();
-
-                                if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
-                                GC.Collect();
-                                return "Файл архива " + output_path + " не найден в папке!";
-                            }
+                            res = true;
+                            break;
                         }
-                        else
+
+                        index++;
+
+                        if (index >= fi.Length)
                         {
-                            //Stupid Windows 7's limit. I use this silly method
                             br.Close();
                             bw.Close();
                             fs.Close();
@@ -1008,10 +1001,23 @@ namespace CBNSTT
 
                             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
                             GC.Collect();
-                            return "File name path's length more than 255 symbols. Please trim it for correctly work.";
+                            return "Файл архива " + output_path + " не найден в папке!";
                         }
                     }
+                    else
+                    {
+                        //Stupid Windows 7's limit. I use this silly method
+                        br.Close();
+                        bw.Close();
+                        fs.Close();
+                        fr.Close();
+
+                        if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
+                        GC.Collect();
+                        return "File name path's length more than 255 symbols. Please trim it for correctly work.";
+                    }
                 }
+            }
 
             head.name_offset = offset;
 
@@ -1022,7 +1028,7 @@ namespace CBNSTT
 
             offset = pad_size(pad_size(56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count, 4) + 24, 0x800);
 
-            for(int i = 0; i < new_table.Length; i++)
+            for (int i = 0; i < new_table.Length; i++)
             {
                 new_table[i].offset += offset;
             }
@@ -1049,32 +1055,32 @@ namespace CBNSTT
             bw.Write(head.name_table_sz);
             bw.Write(head.one);
 
-            for(int i = 0; i < head.file_count; i++)
+            for (int i = 0; i < head.file_count; i++)
             {
                 bw.Write(head.IDs[i]);
             }
 
             for (int i = 0; i < head.file_count; i++)
-                for(int j = 0; j < new_table.Length; j++)
+                for (int j = 0; j < new_table.Length; j++)
                 {
-                    if(head.file_table[i].index == new_table[j].index)
+                    if (head.file_table[i].index == new_table[j].index)
                     {
                         bw.Write(new_table[j].offset);
-                        
+
                         bw.Write(new_table[j].order1);
-                        
+
                         bw.Write(new_table[j].order2);
-                        
+
                         bw.Write(new_table[j].size);
-                        
+
                         bw.Write(new_table[j].block_offset);
-                        
+
                         bw.Write(new_table[j].compression_flag);
-                        
+
                     }
                 }
 
-            for(int i = 0; i < tmp4.Count; i++)
+            for (int i = 0; i < tmp4.Count; i++)
             {
                 bw.Write(tmp4[i]);
             }
@@ -1114,7 +1120,7 @@ namespace CBNSTT
             }
 
             bw.Write(name_block);
-            
+
             fr.Close();
             bw.Close();
             fs.Close();
@@ -1133,31 +1139,31 @@ namespace CBNSTT
             #region
             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
 
-                DirectoryInfo di = new DirectoryInfo(dir_path);
-                FileInfo[] fi = di.GetFiles("*.*", SearchOption.AllDirectories);
+            DirectoryInfo di = new DirectoryInfo(dir_path);
+            FileInfo[] fi = di.GetFiles("*.*", SearchOption.AllDirectories);
 
-                FileStream fr = new FileStream(input_path, FileMode.Open);
-                FileStream fs = new FileStream(output_path + ".tmp", FileMode.CreateNew);
-                BinaryReader br = new BinaryReader(fr);
-                BinaryWriter bw = new BinaryWriter(fs);
+            FileStream fr = new FileStream(input_path, FileMode.Open);
+            FileStream fs = new FileStream(output_path + ".tmp", FileMode.CreateNew);
+            BinaryReader br = new BinaryReader(fr);
+            BinaryWriter bw = new BinaryWriter(fs);
 
             HeaderStruct head = new HeaderStruct();
 
-                long header_offset = 0;
-                int new_head_offset = 0;
+            long header_offset = 0;
+            int new_head_offset = 0;
 
-                head.header = br.ReadBytes(4);
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.count = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.table_size = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.file_count = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
+            head.header = br.ReadBytes(4);
+            header_offset += 4;
+            new_head_offset += 4;
+            head.count = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.table_size = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.file_count = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
 
             if (fi.Length != head.file_count)
             {
@@ -1170,40 +1176,40 @@ namespace CBNSTT
                 return "Count of files in directory and archives don't fit. It must be " + head.file_count + "but found " + fi.Length + " files.";
             }
 
-                head.chunks_sz = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.unknown1 = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.unknown2 = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.zero1 = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.big_chunks_count = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.small_chunks_count = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.name_offset = br.ReadInt32();
-                head.zero2 = br.ReadInt32();
-                    header_offset += 8;
-                    new_head_offset += 8;
-                head.name_table_sz = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
-                head.one = br.ReadInt32();
-                    header_offset += 4;
-                    new_head_offset += 4;
+            head.chunks_sz = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.unknown1 = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.unknown2 = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.zero1 = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.big_chunks_count = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.small_chunks_count = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.name_offset = br.ReadInt32();
+            head.zero2 = br.ReadInt32();
+            header_offset += 8;
+            new_head_offset += 8;
+            head.name_table_sz = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
+            head.one = br.ReadInt32();
+            header_offset += 4;
+            new_head_offset += 4;
 
             head.IDs = new int[head.file_count];
 
             int file_size = 0;
 
-            for(int i = 0; i < head.file_count; i++)
+            for (int i = 0; i < head.file_count; i++)
             {
                 head.IDs[i] = br.ReadInt32();
                 file_size += 4;
@@ -1228,9 +1234,9 @@ namespace CBNSTT
                 head.file_table[i].index = i;
             }
 
-             header_offset += (16 * head.file_count);
-             new_head_offset += (16 * head.file_count);
-             file_size += (16 * head.file_count);
+            header_offset += (16 * head.file_count);
+            new_head_offset += (16 * head.file_count);
+            file_size += (16 * head.file_count);
 
             head.big_chunks_table = new byte[1];
             if (head.big_chunks_count > 0)
@@ -1240,7 +1246,7 @@ namespace CBNSTT
             }
 
             head.small_chunks_table = new byte[1];
-            if(head.small_chunks_count > 0)
+            if (head.small_chunks_count > 0)
             {
                 head.small_chunks_table = br.ReadBytes(head.small_chunks_count);
                 header_offset += head.small_chunks_count;
@@ -1268,72 +1274,72 @@ namespace CBNSTT
             new_size += 24;
             new_head_offset += 24;
             padded_sz = pad_size(new_head_offset, 0x800) - new_head_offset;
-            
+
             header_offset = pad_size(new_head_offset, 0x800);
 
-             br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
-             byte[] name_block = br.ReadBytes(head.name_table_sz);
-             int off = 0;
-             int offf = 0;
-             int counter = 0;
+            br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
+            byte[] name_block = br.ReadBytes(head.name_table_sz);
+            int off = 0;
+            int offf = 0;
+            int counter = 0;
 
-             int index = 0;
+            int index = 0;
 
-                    for (int j = 0; j < head.file_count; j++)
+            for (int j = 0; j < head.file_count; j++)
+            {
+                tmp = new byte[4];
+                counter = 0;
+                Array.Copy(name_block, off, tmp, 0, 4);
+                off += 4;
+                offf = BitConverter.ToInt32(tmp, 0);
+
+                tmp = new byte[1];
+
+                char ch = '1';
+
+                tmp = new byte[name_block.Length - offf];
+                Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+
+                index = 0;
+
+                while (index < tmp.Length)
+                {
+                    ch = (char)tmp[index];
+
+                    if (ch == '\0')
                     {
-                        tmp = new byte[4];
-                        counter = 0;
-                        Array.Copy(name_block, off, tmp, 0, 4);
-                        off += 4;
-                        offf = BitConverter.ToInt32(tmp, 0);
-
-                        tmp = new byte[1];
-
-                        char ch = '1';
-
-                        tmp = new byte[name_block.Length - offf];
-                        Array.Copy(name_block, offf, tmp, 0, tmp.Length);
-
-                        index = 0;
-
-                        while (index<tmp.Length)
-                        {
-                            ch = (char) tmp[index];
-
-                            if (ch == '\0')
-                            {
-                                break;
-                            }
-
-                            index++;
-                            counter++;
-                        }
-
-                        tmp = new byte[counter];
-                        Array.Copy(name_block, offf, tmp, 0, tmp.Length);
-
-                        head.file_table[j].file_name = Encoding.ASCII.GetString(tmp);
-                        if (head.file_table[j].file_name.Contains("/")) head.file_table[j].file_name = head.file_table[j].file_name.Replace('/', '\\');
+                        break;
                     }
 
-                    table[] new_table = new table[head.file_count];
+                    index++;
+                    counter++;
+                }
 
-                    for(int i = 0; i < head.file_table.Length; i++)
-                    {
-                        new_table[i].offset = head.file_table[i].offset;
-                        new_table[i].size = head.file_table[i].size;
-                        new_table[i].c_size = head.file_table[i].c_size;
-                        new_table[i].order1 = head.file_table[i].order1;
-                        new_table[i].order2 = head.file_table[i].order2;
-                        new_table[i].block_offset = head.file_table[i].block_offset;
-                        new_table[i].compression_flag = head.file_table[i].compression_flag;
-                        new_table[i].file_name = head.file_table[i].file_name;
-                        new_table[i].index = head.file_table[i].index;
-                    }
+                tmp = new byte[counter];
+                Array.Copy(name_block, offf, tmp, 0, tmp.Length);
 
-                    ResortTable(ref new_table);
+                head.file_table[j].file_name = Encoding.ASCII.GetString(tmp);
+                if (head.file_table[j].file_name.Contains("/")) head.file_table[j].file_name = head.file_table[j].file_name.Replace('/', '\\');
+            }
 
-                int files_off = (int)header_offset;
+            table[] new_table = new table[head.file_count];
+
+            for (int i = 0; i < head.file_table.Length; i++)
+            {
+                new_table[i].offset = head.file_table[i].offset;
+                new_table[i].size = head.file_table[i].size;
+                new_table[i].c_size = head.file_table[i].c_size;
+                new_table[i].order1 = head.file_table[i].order1;
+                new_table[i].order2 = head.file_table[i].order2;
+                new_table[i].block_offset = head.file_table[i].block_offset;
+                new_table[i].compression_flag = head.file_table[i].compression_flag;
+                new_table[i].file_name = head.file_table[i].file_name;
+                new_table[i].index = head.file_table[i].index;
+            }
+
+            ResortTable(ref new_table);
+
+            int files_off = (int)header_offset;
 
             for (int i = 0; i < new_table.Length; i++)
             {
@@ -1383,109 +1389,109 @@ namespace CBNSTT
                 }
             }
 
-                head.name_offset = files_off;
+            head.name_offset = files_off;
 
-                for (int f = 0; f < head.file_table.Length; f++)
+            for (int f = 0; f < head.file_table.Length; f++)
+            {
+                for (int j = 0; j < new_table.Length; j++)
                 {
-                    for (int j = 0; j < new_table.Length; j++)
+                    if ((new_table[j].index == head.file_table[f].index))
                     {
-                        if ((new_table[j].index == head.file_table[f].index))
-                        {
-                             head.file_table[f].offset = new_table[j].offset;
-                             head.file_table[f].size = new_table[j].size;
+                        head.file_table[f].offset = new_table[j].offset;
+                        head.file_table[f].size = new_table[j].size;
 
-                            break;
-                        }
+                        break;
                     }
                 }
+            }
 
-                //Writing recieved data into file
-                bw.Write(head.header);
-                bw.Write(head.count);
-                bw.Write(head.table_size);
-                bw.Write(head.file_count);
-                bw.Write(head.chunks_sz);
-                bw.Write(head.unknown1);
-                bw.Write(head.unknown2);
-                bw.Write(head.zero1);
-                bw.Write(head.big_chunks_count);
-                bw.Write(head.small_chunks_count);
-                bw.Write(head.name_offset);
-                bw.Write(head.zero2);
-                bw.Write(head.name_table_sz);
-                bw.Write(head.one);
-            
-            for(int i = 0; i < head.IDs.Length; i++)
+            //Writing recieved data into file
+            bw.Write(head.header);
+            bw.Write(head.count);
+            bw.Write(head.table_size);
+            bw.Write(head.file_count);
+            bw.Write(head.chunks_sz);
+            bw.Write(head.unknown1);
+            bw.Write(head.unknown2);
+            bw.Write(head.zero1);
+            bw.Write(head.big_chunks_count);
+            bw.Write(head.small_chunks_count);
+            bw.Write(head.name_offset);
+            bw.Write(head.zero2);
+            bw.Write(head.name_table_sz);
+            bw.Write(head.one);
+
+            for (int i = 0; i < head.IDs.Length; i++)
             {
                 bw.Write(head.IDs[i]);
             }
 
-                for (int i = 0; i < head.file_table.Length; i++)
+            for (int i = 0; i < head.file_table.Length; i++)
+            {
+                bw.Write(head.file_table[i].offset);
+                bw.Write(head.file_table[i].order1);
+                bw.Write(head.file_table[i].order2);
+                bw.Write(head.file_table[i].size);
+                bw.Write(head.file_table[i].block_offset);
+                bw.Write(head.file_table[i].compression_flag);
+            }
+
+            bw.Write(head.unknown_data);
+            if (padded_sz > 0)
+            {
+                tmp = new byte[padded_sz];
+                bw.Write(tmp);
+            }
+
+            byte[] tmp_f;
+
+            int idx = 0;
+            bool res2;
+
+            for (int i = 0; i < new_table.Length; i++)
+            {
+                idx = 0;
+                res2 = false;
+
+                while (!res2)
                 {
-                    bw.Write(head.file_table[i].offset);
-                    bw.Write(head.file_table[i].order1);
-                    bw.Write(head.file_table[i].order2);
-                    bw.Write(head.file_table[i].size);
-                    bw.Write(head.file_table[i].block_offset);
-                    bw.Write(head.file_table[i].compression_flag);
-                }
-
-                bw.Write(head.unknown_data);
-                if (padded_sz > 0)
-                {
-                    tmp = new byte[padded_sz];
-                    bw.Write(tmp);
-                }
-
-                byte[] tmp_f;
-
-                int idx = 0;
-                bool res2;
-
-                for (int i = 0; i < new_table.Length; i++)
-                {
-                    idx = 0;
-                    res2 = false;
-
-                    while (!res2)
+                    if (fi[idx].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
                     {
-                        if (fi[idx].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
-                        {
-                                tmp = File.ReadAllBytes(fi[idx].FullName);
-                                tmp_f = new byte[pad_size(tmp.Length, 0x800)];
-                                Array.Copy(tmp, 0, tmp_f, 0, tmp.Length);
-                                bw.Write(tmp_f);
-                                tmp = null;
-                                tmp_f = null;
-                                res2 = true;
-                        }
-                        idx++;
+                        tmp = File.ReadAllBytes(fi[idx].FullName);
+                        tmp_f = new byte[pad_size(tmp.Length, 0x800)];
+                        Array.Copy(tmp, 0, tmp_f, 0, tmp.Length);
+                        bw.Write(tmp_f);
+                        tmp = null;
+                        tmp_f = null;
+                        res2 = true;
                     }
+                    idx++;
                 }
+            }
 
-                bw.Write(name_block);
+            bw.Write(name_block);
 
-                name_block = null;
+            name_block = null;
 
             string info = "\r\n";
 
 
-                new_table = null;
+            new_table = null;
 
-                br.Close();
-                bw.Close();
-                fs.Close();
-                fr.Close();
+            br.Close();
+            bw.Close();
+            fs.Close();
+            fr.Close();
 
-                if (File.Exists(output_path)) File.Delete(output_path);
+            if (File.Exists(output_path)) File.Delete(output_path);
 
-                File.Move(output_path + ".tmp", output_path);
+            File.Move(output_path + ".tmp", output_path);
 
-                head.Dispose();
+            head.Dispose();
 
-                GC.Collect();
+            GC.Collect();
 
-                return "File " + output_path + " successfully rebuilt." + info;
+            return "File " + output_path + " successfully rebuilt." + info;
             #endregion
         }
 
@@ -1493,7 +1499,7 @@ namespace CBNSTT
         {
             int len = path.Length - 1;
 
-            while(path[len] != '\\')
+            while (path[len] != '\\')
             {
                 len--;
 
@@ -1527,7 +1533,7 @@ namespace CBNSTT
 
             if (fbd.ShowDialog() == DialogResult.OK)
             {
-               textBox2.Text = fbd.SelectedPath;
+                textBox2.Text = fbd.SelectedPath;
             }
         }
 
@@ -1537,7 +1543,7 @@ namespace CBNSTT
 
             string output_path = textBox1.Text;
 
-            string pak_path = textBox1.Text; 
+            string pak_path = textBox1.Text;
 
             string dir_path = textBox2.Text; //Resource's folder
 
@@ -1556,21 +1562,21 @@ namespace CBNSTT
                         }
                     }
 
-                    string result = RepackArchive(pak_path, output_path, dir_path, false);
+                    result = RepackArchive(pak_path, output_path, dir_path, false);
 
                     MessageBox.Show(result);
                 }
             }
             else
             {
-                if(Directory.Exists(pak_path) && Directory.Exists(dir_path))
+                if (Directory.Exists(pak_path) && Directory.Exists(dir_path))
                 {
-                    if(save_modal)
+                    if (save_modal)
                     {
                         FileFolderDialog ffd = new FileFolderDialog();
                         ffd.Dialog.Title = "Please select rebuild folder";
 
-                        if(ffd.ShowDialog() == DialogResult.OK)
+                        if (ffd.ShowDialog() == DialogResult.OK)
                         {
                             output_path = ffd.SelectedPath;
                         }
@@ -1586,7 +1592,7 @@ namespace CBNSTT
                         progressBar1.Minimum = 0;
                         progressBar1.Maximum = fi.Length - 1;
 
-                        string result = "";
+                        result = "";
 
                         for (int i = 0; i < fi.Length; i++)
                         {
@@ -1611,9 +1617,9 @@ namespace CBNSTT
                         }
                     }
                     else listBox1.Items.Add("Please check pak files or rebuild's folders.");
-                    
+
                 }
-            }           
+            }
         }
 
         private void Packer_Tool_Form_Load(object sender, EventArgs e)
@@ -1646,7 +1652,7 @@ namespace CBNSTT
                         }
                     }
 
-                    string result = RepackNew(pak_path, output_path, dir_path);
+                    result = RepackNew(pak_path, output_path, dir_path);
 
                     MessageBox.Show(result);
                 }
@@ -1676,33 +1682,61 @@ namespace CBNSTT
                         progressBar1.Minimum = 0;
                         progressBar1.Maximum = fi.Length - 1;
 
-                        string result = "";
+                        result = "";
+                        int count = 0;
 
-                        for (int i = 0; i < fi.Length; i++)
+                        var t = System.Threading.Tasks.Task.Factory.StartNew(() =>
                         {
-                            for (int j = 0; j < dirs.Length; j++)
+                            for (int i = 0; i < fi.Length; i++)
                             {
-                                string check = get_file_name(dirs[j]);
-                                if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
+                                for (int j = 0; j < dirs.Length; j++)
                                 {
-                                    var Thread = new System.Threading.Thread(
-                                        () =>
-                                        {
-                                            result = RepackNew(fi[i].FullName, output_path + "\\" + fi[i].Name, dirs[j]);
-                                        }
-                                    );
-                                    Thread.Start();
-                                    Thread.Join();
-                                    listBox1.Items.Add(result);
+                                    string check = get_file_name(dirs[j]);
+                                    if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
+                                    {
+                                        result = RepackNew(fi[i].FullName, output_path + "\\" + fi[i].Name, dirs[j]);
+                                        SendMessage(result);
+                                    }
                                 }
-                            }
 
-                            progressBar1.Value = i;
+                                SendProgress(count);
+                                count++;
+                            }
                         }
+                        );
                     }
                     else listBox1.Items.Add("Please check pak files or rebuild's folders.");
 
                 }
+            }
+        }
+
+        public void SendMessage(string message)
+        {
+            if (listBox1.InvokeRequired)
+            {
+                listBox1.Invoke(new SendMessage(SendMessage), message);
+                //this.Invoke(new Action(() => listBox1.Items.Add(message)));
+                Thread.Sleep(500);
+            }
+            else
+            {
+                listBox1.Items.Add(result);
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
+                listBox1.SelectedIndex = -1;
+            }
+        }
+
+        public void SendProgress(int progress)
+        {
+            if(progressBar1.InvokeRequired)
+            {   
+                progressBar1.Invoke((Action) delegate { progressBar1.Value = progress; });
+                Thread.Sleep(500);
+            }
+            else
+            {
+                progressBar1.Value = progress;
             }
         }
 
@@ -1731,7 +1765,7 @@ namespace CBNSTT
                         }
                     }
 
-                    string result = UnpackArchive(pak_path, dir_path);
+                    result = UnpackArchive(pak_path, dir_path);
 
                     MessageBox.Show(result);
                 }
@@ -1747,23 +1781,34 @@ namespace CBNSTT
                     {
                         progressBar1.Minimum = 0;
                         progressBar1.Maximum = fi.Length - 1;
+                        
+                        Array.Sort(fi, (fi1, fi2) => fi2.Length.CompareTo(fi1.Length));
 
-                        string result = "";
+                        result = "";
 
-                        for (int i = 0; i < fi.Length; i++)
-                        {
-                                    var Thread = new System.Threading.Thread(
-                                        () =>
-                                        {
-                                            result = UnpackArchive(fi[i].FullName, dir_path);
-                                        }
-                                    );
-                                    Thread.Start();
-                                    Thread.Join();
-                                    listBox1.Items.Add(result);
+                        if (listBox1.Items.Count > 0) listBox1.Items.Clear();
 
-                            progressBar1.Value = i;
-                        }
+                        var syncConext = SynchronizationContext.Current;
+
+                        int count = 0;
+
+                        if (button4.Enabled) button4.Enabled = false;
+                        if (button3.Enabled) button3.Enabled = false;
+                        if (button2.Enabled) button2.Enabled = false;
+                        if (button1.Enabled) button1.Enabled = false;
+                        if (saveBtn.Enabled) saveBtn.Enabled = false;
+
+                        System.Threading.Tasks.Task.Factory.StartNew(() =>
+                            System.Threading.Tasks.Parallel.For(0, fi.Length, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                           i =>
+                           {
+                               //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
+                               result = UnpackArchive(fi[i].FullName, dir_path);
+
+                               SendMessage(result);
+                               SendProgress(count);
+                               count++;
+               }));
                     }
                     else listBox1.Items.Add("Please check pak files or rebuild's folders.");
                 }

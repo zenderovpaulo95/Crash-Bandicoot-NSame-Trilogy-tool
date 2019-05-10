@@ -49,7 +49,7 @@
             // button1
             // 
             this.button1.Location = new System.Drawing.Point(490, 84);
-            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(26, 19);
             this.button1.TabIndex = 0;
@@ -60,7 +60,7 @@
             // button2
             // 
             this.button2.Location = new System.Drawing.Point(490, 123);
-            this.button2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(26, 19);
             this.button2.TabIndex = 1;
@@ -72,7 +72,7 @@
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Location = new System.Drawing.Point(245, 18);
-            this.checkBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.checkBox1.Margin = new System.Windows.Forms.Padding(2);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(130, 17);
             this.checkBox1.TabIndex = 2;
@@ -82,7 +82,7 @@
             // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(154, 81);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(2);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(323, 20);
             this.textBox1.TabIndex = 3;
@@ -90,7 +90,7 @@
             // textBox2
             // 
             this.textBox2.Location = new System.Drawing.Point(154, 123);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(2);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(323, 20);
             this.textBox2.TabIndex = 4;
@@ -98,7 +98,7 @@
             // saveBtn
             // 
             this.saveBtn.Location = new System.Drawing.Point(245, 40);
-            this.saveBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.saveBtn.Margin = new System.Windows.Forms.Padding(2);
             this.saveBtn.Name = "saveBtn";
             this.saveBtn.Size = new System.Drawing.Size(287, 25);
             this.saveBtn.TabIndex = 5;
@@ -131,9 +131,9 @@
             this.groupBox1.Controls.Add(this.fewArcRB);
             this.groupBox1.Controls.Add(this.onlyOneRB);
             this.groupBox1.Location = new System.Drawing.Point(20, 10);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
             this.groupBox1.Size = new System.Drawing.Size(221, 46);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
@@ -143,7 +143,7 @@
             // 
             this.fewArcRB.AutoSize = true;
             this.fewArcRB.Location = new System.Drawing.Point(124, 18);
-            this.fewArcRB.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.fewArcRB.Margin = new System.Windows.Forms.Padding(2);
             this.fewArcRB.Name = "fewArcRB";
             this.fewArcRB.Size = new System.Drawing.Size(89, 17);
             this.fewArcRB.TabIndex = 1;
@@ -155,7 +155,7 @@
             // 
             this.onlyOneRB.AutoSize = true;
             this.onlyOneRB.Location = new System.Drawing.Point(20, 18);
-            this.onlyOneRB.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.onlyOneRB.Margin = new System.Windows.Forms.Padding(2);
             this.onlyOneRB.Name = "onlyOneRB";
             this.onlyOneRB.Size = new System.Drawing.Size(67, 17);
             this.onlyOneRB.TabIndex = 0;
@@ -168,9 +168,10 @@
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(36, 208);
-            this.progressBar1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(496, 19);
+            this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar1.TabIndex = 9;
             // 
             // listBox1
@@ -180,7 +181,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(11, 250);
-            this.listBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.listBox1.Margin = new System.Windows.Forms.Padding(2);
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(546, 381);
             this.listBox1.TabIndex = 10;
@@ -188,7 +189,7 @@
             // button3
             // 
             this.button3.Location = new System.Drawing.Point(52, 165);
-            this.button3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button3.Margin = new System.Windows.Forms.Padding(2);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(177, 27);
             this.button3.TabIndex = 11;
@@ -199,7 +200,7 @@
             // button4
             // 
             this.button4.Location = new System.Drawing.Point(340, 165);
-            this.button4.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button4.Margin = new System.Windows.Forms.Padding(2);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(136, 27);
             this.button4.TabIndex = 12;
@@ -226,7 +227,7 @@
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.Name = "Packer_Tool_Form";
             this.Text = "Packer Tool";
