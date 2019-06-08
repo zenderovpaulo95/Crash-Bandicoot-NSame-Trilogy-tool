@@ -38,7 +38,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.aboutRichTextBox.DetectUrls = false;
             this.aboutRichTextBox.Location = new System.Drawing.Point(9, 10);
-            this.aboutRichTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.aboutRichTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.aboutRichTextBox.Name = "aboutRichTextBox";
             this.aboutRichTextBox.ReadOnly = true;
             this.aboutRichTextBox.Size = new System.Drawing.Size(320, 318);
@@ -53,7 +53,7 @@
             this.ClientSize = new System.Drawing.Size(337, 335);
             this.Controls.Add(this.aboutRichTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "AboutForm";
             this.Text = "About tool";
             this.ResumeLayout(false);

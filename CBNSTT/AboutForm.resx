@@ -126,6 +126,14 @@ If somebody made a full reasearch of fonts, you can help me with explaining or
 you can modify my code on GitHub:
 https://github.com/pashok6798/Crash-Bandicoot-NSAMETRIOLOGY-Tool
 
+Thanks to SileNTViP and NeoKesha for helping with making this tool.
+
+Version 1.0:
+- Removed sound ediotr (I won't fix it).
+- Faster way unpack/repack multi-archives in Packer Tool.
+- Now Packer Tool can compress small files.
+- Minor fixes in Text Editor.
+
 Version 0.3:
 - Fixed import textures.
 - Now files must be compressed normally.

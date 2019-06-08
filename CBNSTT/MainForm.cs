@@ -40,13 +40,6 @@ namespace CBNSTT
             txt_form.Show();
         }
 
-        //Work with sound form (experimental. Maybe I'll remove this form)
-        private void sndBtn_Click(object sender, EventArgs e)
-        {
-            SoundToolForm snd_frm = new SoundToolForm();
-            snd_frm.Show();
-        }
-
         //Call "about tool" form
         private void AboutBtn_Click(object sender, EventArgs e)
         {
@@ -57,12 +50,6 @@ namespace CBNSTT
         private void MainForm_Load(object sender, EventArgs e)
         {
 
-        }
-
-        private void FontEdBtn_Click(object sender, EventArgs e)
-        {
-            FontEditorForm font_editor = new FontEditorForm();
-            font_editor.Show();
         }
     }
 }

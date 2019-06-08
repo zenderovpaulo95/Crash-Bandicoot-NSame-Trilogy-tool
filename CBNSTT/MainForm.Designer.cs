@@ -31,9 +31,7 @@
             this.PackerBtn = new System.Windows.Forms.Button();
             this.TextEditBtn = new System.Windows.Forms.Button();
             this.TextureBtn = new System.Windows.Forms.Button();
-            this.sndBtn = new System.Windows.Forms.Button();
             this.AboutBtn = new System.Windows.Forms.Button();
-            this.FontEdBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // PackerBtn
@@ -49,7 +47,7 @@
             // 
             // TextEditBtn
             // 
-            this.TextEditBtn.Location = new System.Drawing.Point(176, 25);
+            this.TextEditBtn.Location = new System.Drawing.Point(32, 62);
             this.TextEditBtn.Margin = new System.Windows.Forms.Padding(2);
             this.TextEditBtn.Name = "TextEditBtn";
             this.TextEditBtn.Size = new System.Drawing.Size(106, 19);
@@ -60,7 +58,7 @@
             // 
             // TextureBtn
             // 
-            this.TextureBtn.Location = new System.Drawing.Point(96, 74);
+            this.TextureBtn.Location = new System.Drawing.Point(187, 25);
             this.TextureBtn.Margin = new System.Windows.Forms.Padding(2);
             this.TextureBtn.Name = "TextureBtn";
             this.TextureBtn.Size = new System.Drawing.Size(106, 19);
@@ -69,20 +67,9 @@
             this.TextureBtn.UseVisualStyleBackColor = true;
             this.TextureBtn.Click += new System.EventHandler(this.TextureBtn_Click);
             // 
-            // sndBtn
-            // 
-            this.sndBtn.Location = new System.Drawing.Point(257, 74);
-            this.sndBtn.Margin = new System.Windows.Forms.Padding(2);
-            this.sndBtn.Name = "sndBtn";
-            this.sndBtn.Size = new System.Drawing.Size(106, 19);
-            this.sndBtn.TabIndex = 4;
-            this.sndBtn.Text = "Sound Tool";
-            this.sndBtn.UseVisualStyleBackColor = true;
-            this.sndBtn.Click += new System.EventHandler(this.sndBtn_Click);
-            // 
             // AboutBtn
             // 
-            this.AboutBtn.Location = new System.Drawing.Point(187, 116);
+            this.AboutBtn.Location = new System.Drawing.Point(198, 62);
             this.AboutBtn.Margin = new System.Windows.Forms.Padding(2);
             this.AboutBtn.Name = "AboutBtn";
             this.AboutBtn.Size = new System.Drawing.Size(81, 19);
@@ -91,24 +78,12 @@
             this.AboutBtn.UseVisualStyleBackColor = true;
             this.AboutBtn.Click += new System.EventHandler(this.AboutBtn_Click);
             // 
-            // FontEdBtn
-            // 
-            this.FontEdBtn.Location = new System.Drawing.Point(316, 25);
-            this.FontEdBtn.Name = "FontEdBtn";
-            this.FontEdBtn.Size = new System.Drawing.Size(106, 19);
-            this.FontEdBtn.TabIndex = 6;
-            this.FontEdBtn.Text = "Font Editor";
-            this.FontEdBtn.UseVisualStyleBackColor = true;
-            this.FontEdBtn.Click += new System.EventHandler(this.FontEdBtn_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(470, 162);
-            this.Controls.Add(this.FontEdBtn);
+            this.ClientSize = new System.Drawing.Size(324, 103);
             this.Controls.Add(this.AboutBtn);
-            this.Controls.Add(this.sndBtn);
             this.Controls.Add(this.TextureBtn);
             this.Controls.Add(this.TextEditBtn);
             this.Controls.Add(this.PackerBtn);
@@ -128,9 +103,7 @@
         private System.Windows.Forms.Button PackerBtn;
         private System.Windows.Forms.Button TextEditBtn;
         private System.Windows.Forms.Button TextureBtn;
-        private System.Windows.Forms.Button sndBtn;
         private System.Windows.Forms.Button AboutBtn;
-        private System.Windows.Forms.Button FontEdBtn;
     }
 }
 
