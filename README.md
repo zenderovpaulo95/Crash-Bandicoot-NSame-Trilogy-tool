@@ -1,4 +1,4 @@
-## Welcome to Crash Bandicoot N. Same Triology mod tool
+## Welcome to Crash Bandicoot N. Same Triology mod tool (and technically supports CTR: Nitro Fueled)
 This tool is made for modifying text, texture and pak files.
 
 
