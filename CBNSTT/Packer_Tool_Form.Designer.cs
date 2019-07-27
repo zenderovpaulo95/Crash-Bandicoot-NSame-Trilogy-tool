@@ -42,7 +42,7 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
+            this.UnpackBtn = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -197,23 +197,23 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
-            // button4
+            // UnpackBtn
             // 
-            this.button4.Location = new System.Drawing.Point(340, 165);
-            this.button4.Margin = new System.Windows.Forms.Padding(2);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(136, 27);
-            this.button4.TabIndex = 12;
-            this.button4.Text = "Unpack archives";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
+            this.UnpackBtn.Location = new System.Drawing.Point(340, 165);
+            this.UnpackBtn.Margin = new System.Windows.Forms.Padding(2);
+            this.UnpackBtn.Name = "UnpackBtn";
+            this.UnpackBtn.Size = new System.Drawing.Size(136, 27);
+            this.UnpackBtn.TabIndex = 12;
+            this.UnpackBtn.Text = "Unpack archives";
+            this.UnpackBtn.UseVisualStyleBackColor = true;
+            this.UnpackBtn.Click += new System.EventHandler(this.UnpackBtn_Click);
             // 
             // Packer_Tool_Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(569, 639);
-            this.Controls.Add(this.button4);
+            this.Controls.Add(this.UnpackBtn);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.progressBar1);
@@ -231,6 +231,7 @@
             this.MaximizeBox = false;
             this.Name = "Packer_Tool_Form";
             this.Text = "Packer Tool";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Packer_Tool_Form_FormClosing);
             this.Load += new System.EventHandler(this.Packer_Tool_Form_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -255,6 +256,6 @@
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button UnpackBtn;
     }
 }

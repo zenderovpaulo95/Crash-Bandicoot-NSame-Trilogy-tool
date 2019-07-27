@@ -129,7 +129,7 @@ https://github.com/pashok6798/Crash-Bandicoot-NSAMETRIOLOGY-Tool
 Thanks to SileNTViP and NeoKesha for helping with making this tool.
 
 Version 1.0:
-- Removed sound ediotr (I won't fix it).
+- Removed sound editor (I won't fix it).
 - Faster way unpack/repack multi-archives in Packer Tool.
 - Now Packer Tool can compress small files.
 - Minor fixes in Text Editor.

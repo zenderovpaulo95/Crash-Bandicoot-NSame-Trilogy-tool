@@ -33,6 +33,7 @@ namespace CBNSTT
             public short block_offset;       //Offsets for either table 1 or table 2
             public short compression_flag;   //Compression flag (if 0x2000 then this LZMA compression, else if 0xFFFF then this uncompressed format)
             public string file_name;         //File name
+            public string file_name2;        //Duplicated file name (need for Nitro Fueled)
             public int index;                //Indexes (for correctly rebuild archives)
             public byte[] big_chunks_data;   //Count block of compressed data for files more than 2MB (or 4MB?)
             public byte[] small_chunks_data; //Count block of compressed data for files less than 2MB (or 4MB?)
@@ -78,6 +79,8 @@ namespace CBNSTT
                 unknown_data = null;
             }
         }
+
+        System.Threading.Tasks.ParallelOptions PO = new System.Threading.Tasks.ParallelOptions();
 
         //Browse PAK file's dialog form
         private void button1_Click(object sender, EventArgs e)
@@ -176,13 +179,14 @@ namespace CBNSTT
             FileStream fr = new FileStream(input_path, FileMode.Open);
             BinaryReader br = new BinaryReader(fr);
 
+            //Collect header information
+            long header_offset = 0;
+            int new_head_offset = 0;
+
+            HeaderStruct head = new HeaderStruct();
+
             try
             {
-                //Collect header information
-                HeaderStruct head = new HeaderStruct();
-                long header_offset = 0;
-                int new_head_offset = 0;
-
                 head.header = br.ReadBytes(4);
                 header_offset += 4;
                 new_head_offset += 4;
@@ -249,6 +253,8 @@ namespace CBNSTT
                     head.file_table[i].c_size = -1; //Default set value -1 for uncompressed files. If file is compressed, it changes for compressed size
                     head.file_table[i].block_offset = br.ReadInt16();
                     head.file_table[i].compression_flag = br.ReadInt16();
+                    head.file_table[i].big_chunks_data = null;
+                    head.file_table[i].small_chunks_data = null;
                     head.file_table[i].index = i;
                 }
 
@@ -270,31 +276,15 @@ namespace CBNSTT
                     header_offset += head.small_chunks_count;
                 }
 
-                head.small_chunks_count = 0;
-                head.big_chunks_count = 0;
                 head.table_size = file_size;
 
                 int padded_off = pad_size((int)header_offset, 4);
                 br.BaseStream.Seek(padded_off, SeekOrigin.Begin);
 
-                int new_size = (int)header_offset - head.small_chunks_count - (head.big_chunks_count * 2);
-
-                //Very strange method. I need rethink this method.
-                int padded_sz = pad_size(new_size, 4) - new_size;
                 byte[] tmp;
 
-                if (padded_sz > 0)
-                {
-                    tmp = new byte[padded_sz];
-                    header_offset += padded_sz;
-                }
-
                 head.unknown_data = br.ReadBytes(24);
-                new_size += 24;
                 new_head_offset += 24;
-                padded_sz = pad_size(new_head_offset, 0x800) - new_head_offset;
-
-                header_offset = pad_size(new_head_offset, 0x800);
 
                 br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
                 byte[] name_block = br.ReadBytes(head.name_table_sz);
@@ -338,7 +328,35 @@ namespace CBNSTT
                     Array.Copy(name_block, offf, tmp, 0, tmp.Length);
 
                     head.file_table[j].file_name = Encoding.ASCII.GetString(tmp);
+                    head.file_table[j].file_name2 = null; //Default is null
                     if (head.file_table[j].file_name.Contains("/")) head.file_table[j].file_name = head.file_table[j].file_name.Replace('/', '\\');
+
+                    if(head.count > 12) //If Nitro Fueled then get duplicated file name
+                    {
+                        index++;
+                        counter = 0;
+
+                        tmp = new byte[name_block.Length - offf];
+                        Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+
+                        while (index < tmp.Length)
+                        {
+                            ch = (char)tmp[index];
+
+                            if (ch == '\0')
+                            {
+                                break;
+                            }
+
+                            index++;
+                            counter++;
+                        }
+
+                        tmp = new byte[counter];
+                        Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+                        head.file_table[j].file_name2 = Encoding.ASCII.GetString(tmp);
+                        if (head.file_table[j].file_name2.Contains("/")) head.file_table[j].file_name2 = head.file_table[j].file_name2.Replace('/', '\\');
+                    }
                 }
 
                 table[] new_table = new table[head.file_count];
@@ -354,30 +372,20 @@ namespace CBNSTT
                     new_table[i].compression_flag = head.file_table[i].compression_flag;
                     new_table[i].file_name = head.file_table[i].file_name;
                     new_table[i].index = head.file_table[i].index;
-
-                    if (head.file_table[i].size >= 0x40000 && head.big_chunks_count > 0)
-                    {
-                        int tmp_off = head.file_table[i].block_offset * 2;
-                        int tmp_sz = (pad_size(head.file_table[i].size, 0x8000) / 0x8000) + 2;
-                        head.file_table[i].big_chunks_data = new byte[tmp_sz];
-                        Array.Copy(head.big_chunks_table, tmp_off, head.file_table[i].big_chunks_data, 0, head.file_table[i].big_chunks_data.Length);
-                    }
-                    else head.file_table[i].big_chunks_data = null;
-
                     new_table[i].big_chunks_data = head.file_table[i].big_chunks_data;
+                    new_table[i].small_chunks_data = head.file_table[i].small_chunks_data;
                 }
-
 
                 byte[] content;
                 int ch_size;
                 byte[] properties;
                 byte[] c_content;
 
+                string pak_name = get_file_name(input_path);
+                pak_name = pak_name.Remove(pak_name.IndexOf('.'), pak_name.Length - pak_name.IndexOf('.'));
 
                 for (int j = 0; j < new_table.Length; j++)
                 {
-                    string pak_name = get_file_name(input_path);
-                    pak_name = pak_name.Remove(pak_name.IndexOf('.'), pak_name.Length - pak_name.IndexOf('.'));
                     string dir = get_dir_path(new_table[j].file_name);
 
                     if (!Directory.Exists(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir)) Directory.CreateDirectory(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir);
@@ -476,19 +484,22 @@ namespace CBNSTT
                 br.Close();
                 fr.Close();
 
+                GC.Collect();
+
                 return "File " + input_path + " successfully extracted!";
             }
             catch
             {
                 if (br != null) br.Close();
                 if (fr != null) fr.Close();
-                return "Something wrong. The last file was number " + (num + 1).ToString();
+                head.Dispose();
+                GC.Collect();
+                return "Something wrong. The last file was number " + (num + 1).ToString() + ". File name: " + input_path;
             }
         }
 
         public string RepackArchive(string input_path, string output_path, string dir_path, bool compress)
         {
-            #region
             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
 
             DirectoryInfo di = new DirectoryInfo(dir_path);
@@ -503,6 +514,7 @@ namespace CBNSTT
 
             long header_offset = 0;
             int new_head_offset = 0;
+            byte[] c_header = { 0x5D, 0x00, 0x80, 0x00, 0x00 }; //Compressed header (for PC version. For Nintendo Switch I have to think)
 
             head.header = br.ReadBytes(4);
             header_offset += 4;
@@ -581,8 +593,11 @@ namespace CBNSTT
                 head.file_table[i].c_size = -1;
                 head.file_table[i].block_offset = br.ReadInt16();
                 head.file_table[i].compression_flag = br.ReadInt16();
-                head.file_table[i].block_offset = -1;
-                head.file_table[i].compression_flag = -1;
+                if (!compress)
+                {
+                    head.file_table[i].block_offset = -1;
+                    head.file_table[i].compression_flag = -1;
+                }
                 head.file_table[i].index = i;
             }
 
@@ -604,14 +619,16 @@ namespace CBNSTT
                 header_offset += head.small_chunks_count;
             }
 
-            head.small_chunks_count = 0;
-            head.big_chunks_count = 0;
             head.table_size = file_size;
 
             int padded_off = pad_size((int)header_offset, 4);
             br.BaseStream.Seek(padded_off, SeekOrigin.Begin);
 
-            int new_size = (int)header_offset - head.small_chunks_count - (head.big_chunks_count * 2);
+            int new_size = (int)header_offset;
+            if(compress) new_size -= head.small_chunks_count - (head.big_chunks_count * 2);
+
+            head.small_chunks_count = 0;
+            head.big_chunks_count = 0;
 
             int padded_sz = pad_size(new_size, 4) - new_size;
             byte[] tmp;
@@ -671,7 +688,35 @@ namespace CBNSTT
                 Array.Copy(name_block, offf, tmp, 0, tmp.Length);
 
                 head.file_table[j].file_name = Encoding.ASCII.GetString(tmp);
+                head.file_table[j].file_name2 = null;
                 if (head.file_table[j].file_name.Contains("/") && MainForm.slash != '/') head.file_table[j].file_name = head.file_table[j].file_name.Replace('/', '\\');
+
+                if (head.count > 12) //If Nitro Fueled then get duplicated file name
+                {
+                    index++;
+                    counter = 0;
+
+                    tmp = new byte[name_block.Length - offf];
+                    Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+
+                    while (index < tmp.Length)
+                    {
+                        ch = (char)tmp[index];
+
+                        if (ch == '\0')
+                        {
+                            break;
+                        }
+
+                        index++;
+                        counter++;
+                    }
+
+                    tmp = new byte[counter];
+                    Array.Copy(name_block, offf, tmp, 0, tmp.Length);
+                    head.file_table[j].file_name2 = Encoding.ASCII.GetString(tmp);
+                    if (head.file_table[j].file_name2.Contains("/")) head.file_table[j].file_name2 = head.file_table[j].file_name2.Replace('/', '\\');
+                }
             }
 
             table[] new_table = new table[head.file_count];
@@ -687,11 +732,23 @@ namespace CBNSTT
                 new_table[i].compression_flag = head.file_table[i].compression_flag;
                 new_table[i].file_name = head.file_table[i].file_name;
                 new_table[i].index = head.file_table[i].index;
+                head.file_table[i].big_chunks_data = null;
+                head.file_table[i].small_chunks_data = null;
+                new_table[i].big_chunks_data = head.file_table[i].big_chunks_data;
+                new_table[i].small_chunks_data = head.file_table[i].small_chunks_data;
             }
 
             ResortTable(ref new_table);
 
-            int files_off = (int)header_offset;
+            int offset = 0;
+            int size = 0;
+            int count = 0;
+            byte[] tmp2;
+            List<byte[]> tmp3 = new List<byte[]>();
+            List<byte[]> tmp4 = new List<byte[]>();
+            List<byte[]> tmp5 = new List<byte[]>();
+            int c_offset = 0; //Table's offset big data
+            int c_offset_small = 0; //Table's offset small data
 
             for (int i = 0; i < new_table.Length; i++)
             {
@@ -705,13 +762,249 @@ namespace CBNSTT
                     {
                         if (fi[index].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
                         {
-                            new_table[i].offset = files_off;
+                            new_table[i].offset = offset;
                             new_table[i].size = (int)fi[index].Length;
 
-                            files_off += pad_size((int)fi[index].Length, 0x800);
+                            if (fi[index].Length >= 0x40000 && new_table[i].compression_flag != -1 && compress)
+                            {
+                                count = (pad_size(new_table[i].size, 0x8000) / 0x8000) + 1;
+                                head.big_chunks_count += count;
+
+                                int c_off = 0;
+
+                                int f_off = 0; //For recounting file's offset
+                                int f_size = (int)fi[index].Length;
+                                new_table[i].size = (int)fi[index].Length;
+
+                                int bl_size = 0x8000; //Default uncompressed block size
+                                short len = 0;
+                                int len_int32 = 0; //Nintendo Switch
+                                short tmps = 0;
+                                int pos = 4;
+                                int plus = 9;
+
+                                if (tmp3.Count > 0) tmp3.Clear();
+
+                                new_table[i].c_size = 0;
+
+                                FileStream fcr = new FileStream(fi[index].FullName, FileMode.Open);
+                                while (f_off != f_size)
+                                {
+                                    bl_size = 0x8000;
+                                    if (bl_size > f_size - f_off) bl_size = f_size - f_off;
+                                    tmp = new byte[bl_size];
+                                    fcr.Read(tmp, 0, tmp.Length);
+
+                                    f_off += tmp.Length;
+
+                                    SevenZip.Compression.LZMA.Encoder encode = new SevenZip.Compression.LZMA.Encoder();
+                                    MemoryStream ms = new MemoryStream(tmp);
+                                    MemoryStream ms2 = new MemoryStream();
+                                    encode.Code(ms, ms2, -1, -1, null);
+                                    ms2.Close();
+                                    ms.Close();
+
+                                    tmp = ms2.ToArray();
+                                    len = (short)tmp.Length;
+                                    len_int32 = tmp.Length;
+
+                                    if (head.count == 11)
+                                    {
+                                        pos = 2;
+                                        plus = 7;
+                                    }
+
+                                    tmp2 = new byte[pad_size(tmp.Length + plus, 0x800)];
+                                    Array.Copy(c_header, 0, tmp2, pos, c_header.Length);
+                                    Array.Copy(tmp, 0, tmp2, plus, tmp.Length);
+
+                                    if (head.count == 11)
+                                    {
+                                        tmp = new byte[2];
+                                        tmp = BitConverter.GetBytes(len);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+                                    else
+                                    {
+                                        tmp = new byte[4];
+                                        tmp = BitConverter.GetBytes(len_int32);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+
+                                    new_table[i].c_size += tmp2.Length;
+
+                                    tmp = new byte[2];
+                                    tmps = (short)((c_off / 0x800) | 0x8000); //First compressed offset divides 0x800, then logically sums 0x8000 for correct value
+                                    tmp = BitConverter.GetBytes(tmps);
+                                    tmp3.Add(tmp);
+                                    c_off += tmp2.Length;
+
+                                    bw.Write(tmp2, 0, tmp2.Length);
+                                }
+
+                                tmps = (short)(new_table[i].c_size / 0x800);
+                                tmp = new byte[2];
+                                tmp = BitConverter.GetBytes(tmps);
+                                tmp3.Add(tmp);
+
+                                tmp = new byte[count * 2];
+
+                                new_table[i].big_chunks_data = null;
+                                new_table[i].block_offset = (short)c_offset;
+
+                                c_offset += (tmp.Length / 2);
+
+                                for (int c = 0; c < tmp3.Count; c++)
+                                {
+                                    Array.Copy(tmp3[c], 0, tmp, c * 2, tmp3[c].Length);
+                                }
+
+                                fcr.Close();
+
+                                tmp4.Add(tmp);
+                                offset += new_table[i].c_size;
+                            }
+                            else if (fi[index].Length < 0x40000 && new_table[i].compression_flag != -1 && compress)
+                            {
+                                int c_off = 0;
+
+                                int f_off = 0; //For recounting file's offset
+                                int f_size = (int)fi[index].Length;
+                                new_table[i].size = (int)fi[index].Length;
+
+                                int bl_size = 0x8000; //Default uncompressed block size
+                                short len = 0;
+                                int len_int32 = 0; //Nintendo Switch
+                                short tmps = 0;
+                                int pos = 4;
+                                int plus = 9;
+
+                                if (tmp3.Count > 0) tmp3.Clear();
+
+                                new_table[i].c_size = 0;
+
+                                count = 0; //Count blocks
+
+                                FileStream fcr = new FileStream(fi[index].FullName, FileMode.Open);
+
+                                tmp = new byte[2];
+                                tmps = (short)(count | 0x80); //Just logically sum 0x80 for correct value
+                                tmp = BitConverter.GetBytes(tmps);
+                                tmp3.Add(tmp);
+
+                                int sub_blocks = pad_size(f_size, 0x8000) / 0x8000;
+                                int bl_count = 1;
+
+                                while (f_off != f_size)
+                                {
+                                    bl_size = 0x8000;
+                                    if (bl_size > f_size - f_off) bl_size = f_size - f_off;
+                                    tmp = new byte[bl_size];
+                                    fcr.Read(tmp, 0, tmp.Length);
+
+                                    f_off += tmp.Length;
+
+                                    SevenZip.Compression.LZMA.Encoder encode = new SevenZip.Compression.LZMA.Encoder();
+                                    MemoryStream ms = new MemoryStream(tmp);
+                                    MemoryStream ms2 = new MemoryStream();
+                                    encode.Code(ms, ms2, -1, -1, null);
+                                    ms2.Close();
+                                    ms.Close();
+
+                                    tmp = ms2.ToArray();
+                                    len = (short)tmp.Length;
+                                    len_int32 = tmp.Length;
+
+                                    if (head.count == 11)
+                                    {
+                                        pos = 2;
+                                        plus = 7;
+                                    }
+
+                                    tmp2 = new byte[pad_size(tmp.Length + plus, 0x800)];
+                                    count += (short)(tmp2.Length / 0x800);
+                                    Array.Copy(c_header, 0, tmp2, pos, c_header.Length);
+                                    Array.Copy(tmp, 0, tmp2, plus, tmp.Length);
+
+                                    if (head.count == 11)
+                                    {
+                                        tmp = new byte[2];
+                                        tmp = BitConverter.GetBytes(len);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+                                    else
+                                    {
+                                        tmp = new byte[4];
+                                        tmp = BitConverter.GetBytes(len_int32);
+                                        Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+                                    }
+
+                                    new_table[i].c_size += tmp2.Length;
+
+                                    if (bl_count < sub_blocks)
+                                    {
+                                        tmp = new byte[2];
+                                        tmps = (short)(count | 0x80); //Just logically sum 0x80 for correct value
+                                        tmp = BitConverter.GetBytes(tmps);
+                                        tmp3.Add(tmp);
+                                        bl_count++;
+                                    }
+
+                                    bw.Write(tmp2, 0, tmp2.Length);
+                                    c_off += tmp2.Length;
+                                }
+
+                                //tmps = (short)(new_table[i].c_size / 0x800);
+                                tmp = new byte[2];
+                                tmp = BitConverter.GetBytes(count);
+                                tmp3.Add(tmp);
+
+                                head.small_chunks_count += tmp3.Count;
+
+                                tmp = new byte[tmp3.Count];
+
+                                new_table[i].big_chunks_data = null;
+                                new_table[i].small_chunks_data = null;
+                                new_table[i].block_offset = (short)c_offset_small;
+
+                                c_offset_small += tmp.Length;
+
+                                for (int c = 0; c < tmp3.Count; c++)
+                                {
+                                    Array.Copy(tmp3[c], 0, tmp, c, 1);
+                                }
+
+                                tmp3.Clear();
+
+                                fcr.Close();
+
+                                tmp5.Add(tmp);
+                                offset += new_table[i].c_size;
+                            }
+                            else
+                            {
+                                offset += pad_size((int)fi[index].Length, 0x800);
+                                new_table[i].block_offset = -1;
+                                new_table[i].compression_flag = -1;
+
+                                FileStream frf = new FileStream(fi[index].FullName, FileMode.Open);
+                                tmp = new byte[frf.Length];
+                                frf.Read(tmp, 0, tmp.Length);
+                                frf.Close();
+
+                                tmp2 = new byte[pad_size(tmp.Length, 0x800)];
+                                Array.Copy(tmp, 0, tmp2, 0, tmp.Length);
+
+                                bw.Write(tmp2, 0, tmp2.Length);
+                            }
+
+                            tmp = null;
+                            tmp2 = null;
+                            GC.Collect();
                             res = true;
                             break;
                         }
+
 
                         index++;
 
@@ -741,7 +1034,12 @@ namespace CBNSTT
                 }
             }
 
-            head.name_offset = files_off;
+            bw.Close();
+            br.Close();
+            fs.Close();
+            fr.Close();
+
+            head.name_offset = offset;
 
             for (int f = 0; f < head.file_table.Length; f++)
             {
@@ -757,9 +1055,22 @@ namespace CBNSTT
                 }
             }
 
-            //Writing recieved data into file
+            offset = pad_size(pad_size(56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count, 4) + 24, 0x800);
+
+            for (int i = 0; i < new_table.Length; i++)
+            {
+                new_table[i].offset += offset;
+            }
+            head.name_offset += offset;
+
+            if (File.Exists(output_path)) File.Delete(output_path);
+
+            fr = new FileStream(output_path + ".tmp", FileMode.Open);
+            fs = new FileStream(output_path, FileMode.CreateNew);
+            bw = new BinaryWriter(fs);
             bw.Write(head.header);
             bw.Write(head.count);
+            head.table_size = (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count;
             bw.Write(head.table_size);
             bw.Write(head.file_count);
             bw.Write(head.chunks_sz);
@@ -773,78 +1084,86 @@ namespace CBNSTT
             bw.Write(head.name_table_sz);
             bw.Write(head.one);
 
-            for (int i = 0; i < head.IDs.Length; i++)
+            for (int i = 0; i < head.file_count; i++)
             {
                 bw.Write(head.IDs[i]);
             }
 
-            for (int i = 0; i < head.file_table.Length; i++)
+            for (int i = 0; i < head.file_count; i++)
+                for (int j = 0; j < new_table.Length; j++)
+                {
+                    if (head.file_table[i].index == new_table[j].index)
+                    {
+                        bw.Write(new_table[j].offset);
+
+                        bw.Write(new_table[j].order1);
+
+                        bw.Write(new_table[j].order2);
+
+                        bw.Write(new_table[j].size);
+
+                        bw.Write(new_table[j].block_offset);
+
+                        bw.Write(new_table[j].compression_flag);
+
+                    }
+                }
+
+            for (int i = 0; i < tmp4.Count; i++)
             {
-                bw.Write(head.file_table[i].offset);
-                bw.Write(head.file_table[i].order1);
-                bw.Write(head.file_table[i].order2);
-                bw.Write(head.file_table[i].size);
-                bw.Write(head.file_table[i].block_offset);
-                bw.Write(head.file_table[i].compression_flag);
+                bw.Write(tmp4[i]);
             }
+
+            for (int i = 0; i < tmp5.Count; i++)
+            {
+                bw.Write(tmp5[i]);
+            }
+
+            /*if(head.small_chunks_table.Length > 0 && head.small_chunks_count > 0)
+            {
+                bw.Write(head.small_chunks_table);
+            }*/
+
+            int tmp_sz2 = 56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count;
+
+            tmp = new byte[pad_size(tmp_sz2, 4) - tmp_sz2];
+            bw.Write(tmp);
+
+            tmp = new byte[offset - (pad_size(tmp_sz2, 4) + 24)];
 
             bw.Write(head.unknown_data);
-            if (padded_sz > 0)
+            bw.Write(tmp);
+
+            offset = 0;
+
+            while (offset != fr.Length)
             {
-                tmp = new byte[padded_sz];
+                tmp = new byte[0x10000]; //just in case I uses buffer with 64KB
+                if (tmp.Length > fr.Length - offset) tmp = new byte[fr.Length - offset];
+
+                fr.Read(tmp, 0, tmp.Length);
                 bw.Write(tmp);
-            }
 
-            byte[] tmp_f;
-
-            int idx = 0;
-            bool res2;
-
-            for (int i = 0; i < new_table.Length; i++)
-            {
-                idx = 0;
-                res2 = false;
-
-                while (!res2)
-                {
-                    if (fi[idx].FullName.ToUpper().IndexOf(new_table[i].file_name.ToUpper()) > 0)
-                    {
-                        tmp = File.ReadAllBytes(fi[idx].FullName);
-                        tmp_f = new byte[pad_size(tmp.Length, 0x800)];
-                        Array.Copy(tmp, 0, tmp_f, 0, tmp.Length);
-                        bw.Write(tmp_f);
-                        tmp = null;
-                        tmp_f = null;
-                        res2 = true;
-                    }
-                    idx++;
-                }
+                offset += tmp.Length;
             }
 
             bw.Write(name_block);
 
-            name_block = null;
-
-            string info = "\r\n";
-
-
-            new_table = null;
-
-            br.Close();
+            fr.Close();
             bw.Close();
             fs.Close();
-            fr.Close();
 
-            if (File.Exists(output_path)) File.Delete(output_path);
+            if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
 
-            File.Move(output_path + ".tmp", output_path);
-
+            new_table = null;
             head.Dispose();
+
+            tmp4.Clear();
+            tmp5.Clear();
 
             GC.Collect();
 
-            return "File " + output_path + " successfully rebuilt." + info;
-            #endregion
+            return "File " + output_path + " successfully rebuilt.";
         }
 
         public static string get_file_name(string path)
@@ -1006,7 +1325,7 @@ namespace CBNSTT
                         }
                     }
 
-                    result = RepackArchive(pak_path, output_path, dir_path, false);
+                    result = RepackArchive(pak_path, output_path, dir_path, true);
 
                     MessageBox.Show(result);
                 }
@@ -1050,7 +1369,7 @@ namespace CBNSTT
                                if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                {
 
-                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], false);
+                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], true);
                                    SendMessage(result);
                                }
                            });
@@ -1094,7 +1413,12 @@ namespace CBNSTT
             }
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void Packer_Tool_Form_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            
+        }
+
+        private void UnpackBtn_Click(object sender, EventArgs e)
         {
             bool save_modal = checkBox1.Checked;
 
@@ -1133,30 +1457,49 @@ namespace CBNSTT
 
                     if (fi.Length > 0)
                     {
-                        progressBar1.Minimum = 0;
-                        progressBar1.Maximum = fi.Length - 1;
-                        
-                        Array.Sort(fi, (fi1, fi2) => fi2.Length.CompareTo(fi1.Length));
+                        PO = new System.Threading.Tasks.ParallelOptions();
+                        PO.MaxDegreeOfParallelism = System.Environment.ProcessorCount;
 
-                        result = "";
+                        try
+                        {
+                            progressBar1.Minimum = 0;
+                            progressBar1.Maximum = fi.Length - 1;
 
-                        if (listBox1.Items.Count > 0) listBox1.Items.Clear();
+                            Array.Sort(fi, (fi1, fi2) => fi2.Length.CompareTo(fi1.Length));
 
-                        var syncConext = SynchronizationContext.Current;
+                            result = "";
 
-                        int count = 0;
+                            if (listBox1.Items.Count > 0) listBox1.Items.Clear();
 
-                        System.Threading.Tasks.Task.Factory.StartNew(() =>
-                            System.Threading.Tasks.Parallel.For(0, fi.Length, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-                           i =>
-                           {
-                               //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
-                               result = UnpackArchive(fi[i].FullName, dir_path);
+                            var syncConext = SynchronizationContext.Current;
 
-                               SendMessage(result);
-                               SendProgress(count);
-                               count++;
-               }));
+                            int count = 0;
+
+                            System.Threading.Tasks.Task.Factory.StartNew(() =>
+                            {
+                                System.Threading.Tasks.Parallel.For(0, fi.Length, PO,
+                                    i =>
+                                    {
+                                       //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
+                                       result = UnpackArchive(fi[i].FullName, dir_path);
+
+                                        SendMessage(result);
+                                        SendProgress(count);
+                                        count++;
+                                    });
+                            });
+                        }
+                        catch (OperationCanceledException ex)
+                        {
+                            
+                        }
+                        catch(Exception exce)
+                        {
+                            SendMessage(exce.Message);
+                        }
+                        finally
+                        {
+                        }
                     }
                     else listBox1.Items.Add("Please check pak files or rebuild's folders.");
                 }
