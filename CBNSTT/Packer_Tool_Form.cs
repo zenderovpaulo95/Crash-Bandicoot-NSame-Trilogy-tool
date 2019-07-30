@@ -1477,16 +1477,16 @@ namespace CBNSTT
 
                             System.Threading.Tasks.Task.Factory.StartNew(() =>
                             {
-                                System.Threading.Tasks.Parallel.For(0, fi.Length, PO,
-                                    i =>
-                                    {
-                                       //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
-                                       result = UnpackArchive(fi[i].FullName, dir_path);
+                                System.Threading.Tasks.Parallel.ForEach(fi, PO,
+                                file =>
+                                {
+                                    //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
+                                    result = UnpackArchive(file.FullName, dir_path);
 
-                                        SendMessage(result);
-                                        SendProgress(count);
-                                        count++;
-                                    });
+                                    SendMessage(result);
+                                    SendProgress(count);
+                                    count++;
+                                });
                             });
                         }
                         catch (OperationCanceledException ex)
