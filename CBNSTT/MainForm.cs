@@ -51,5 +51,11 @@ namespace CBNSTT
         {
 
         }
+
+        private void FontReplacerBtn_Click(object sender, EventArgs e)
+        {
+            FontReplacer font = new FontReplacer();
+            font.Show();
+        }
     }
 }
