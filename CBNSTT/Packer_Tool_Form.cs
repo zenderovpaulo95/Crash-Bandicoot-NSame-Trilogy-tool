@@ -25,7 +25,7 @@ namespace CBNSTT
 
         public struct table
         {
-            public int offset;
+            public uint offset;
             public short order1;             //I'm not sure about that var name, but if you'll resort this values it will be ordered
             public short order2;
             public int size;
@@ -51,8 +51,7 @@ namespace CBNSTT
             public int zero1;              //I saw there's only 0 value. I'm not sure but maybe both unknown2 and zero1 values are long type and it must be only one value
             public int big_chunks_count;   //Count of chunks for compressed big size files (more than 2MB or 4MB)
             public int small_chunks_count; //Count of chunks for compressed small size files (less than 2MB or 4MB)
-            public int name_offset;        //Offset to file name's table
-            public int zero2;              //It showes only 0 but I think, it must be long type of name_offset value
+            public ulong name_offset;        //Offset to file name's table
             public int name_table_sz;      //Size block with file names
             public int one;                //This variable always shows only value 1
 
@@ -132,7 +131,7 @@ namespace CBNSTT
                 {
                     if (table_resort[m].offset > table_resort[m + 1].offset)
                     {
-                        int tmp_offset = table_resort[m].offset;
+                        uint tmp_offset = table_resort[m].offset;
                         int tmp_size = table_resort[m].size;
                         int tmp_c_size = table_resort[m].c_size;
                         short tmp_order1 = table_resort[m].order1;
@@ -218,8 +217,7 @@ namespace CBNSTT
                 head.small_chunks_count = br.ReadInt32();
                 header_offset += 4;
                 new_head_offset += 4;
-                head.name_offset = br.ReadInt32();
-                head.zero2 = br.ReadInt32();
+                head.name_offset = br.ReadUInt64();
                 header_offset += 8;
                 new_head_offset += 8;
                 head.name_table_sz = br.ReadInt32();
@@ -246,7 +244,7 @@ namespace CBNSTT
 
                 for (int i = 0; i < head.file_count; i++)
                 {
-                    head.file_table[i].offset = br.ReadInt32();
+                    head.file_table[i].offset = br.ReadUInt32();
                     head.file_table[i].order1 = br.ReadInt16();
                     head.file_table[i].order2 = br.ReadInt16();
                     head.file_table[i].size = br.ReadInt32();
@@ -286,7 +284,7 @@ namespace CBNSTT
                 head.unknown_data = br.ReadBytes(24);
                 new_head_offset += 24;
 
-                br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
+                br.BaseStream.Seek((long)head.name_offset, SeekOrigin.Begin);
                 byte[] name_block = br.ReadBytes(head.name_table_sz);
                 int off = 0;
                 int offf = 0;
@@ -395,7 +393,7 @@ namespace CBNSTT
                     {
                         int size = 0;
 
-                        int offset = new_table[j].offset;
+                        uint offset = new_table[j].offset;
                         int def_block = 0x8000;
 
                         FileStream fw = new FileStream(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + new_table[j].file_name, FileMode.CreateNew);
@@ -424,8 +422,8 @@ namespace CBNSTT
 
                                 fw.Write(content, 0, content.Length);
 
-                                if (head.count == 11) offset += pad_size(ch_size + 7, 0x800);
-                                else offset += pad_size(ch_size + 9, 0x800);
+                                if (head.count == 11) offset += (uint)pad_size(ch_size + 7, 0x800);
+                                else offset += (uint)pad_size(ch_size + 9, 0x800);
 
                                 size += def_block;
 
@@ -434,7 +432,7 @@ namespace CBNSTT
                             }
                             catch
                             {
-                                int off_tmp = new_table[j].offset;
+                                uint off_tmp = new_table[j].offset;
                                 if (size >= new_table[j].size)
                                 {
                                     if (fw != null) fw.Close();
@@ -457,7 +455,7 @@ namespace CBNSTT
                                     content = br.ReadBytes(def_block);
                                     fw.Write(content, 0, content.Length);
 
-                                    offset += pad_size(def_block, 0x800);
+                                    offset += (uint)pad_size(def_block, 0x800);
                                     size += def_block;
                                     content = null;
                                 }
@@ -558,8 +556,7 @@ namespace CBNSTT
             head.small_chunks_count = br.ReadInt32();
             header_offset += 4;
             new_head_offset += 4;
-            head.name_offset = br.ReadInt32();
-            head.zero2 = br.ReadInt32();
+            head.name_offset = br.ReadUInt64();
             header_offset += 8;
             new_head_offset += 8;
             head.name_table_sz = br.ReadInt32();
@@ -586,7 +583,7 @@ namespace CBNSTT
 
             for (int i = 0; i < head.file_count; i++)
             {
-                head.file_table[i].offset = br.ReadInt32();
+                head.file_table[i].offset = br.ReadUInt32();
                 head.file_table[i].order1 = br.ReadInt16();
                 head.file_table[i].order2 = br.ReadInt16();
                 head.file_table[i].size = br.ReadInt32();
@@ -646,7 +643,7 @@ namespace CBNSTT
 
             header_offset = pad_size(new_head_offset, 0x800);
 
-            br.BaseStream.Seek(head.name_offset, SeekOrigin.Begin);
+            br.BaseStream.Seek((long)head.name_offset, SeekOrigin.Begin);
             byte[] name_block = br.ReadBytes(head.name_table_sz);
             int off = 0;
             int offf = 0;
@@ -740,7 +737,7 @@ namespace CBNSTT
 
             ResortTable(ref new_table);
 
-            int offset = 0;
+            uint offset = 0;
             int size = 0;
             int count = 0;
             byte[] tmp2;
@@ -862,7 +859,7 @@ namespace CBNSTT
                                 fcr.Close();
 
                                 tmp4.Add(tmp);
-                                offset += new_table[i].c_size;
+                                offset += (uint)new_table[i].c_size;
                             }
                             else if (fi[index].Length < 0x40000 && new_table[i].compression_flag != -1 && compress)
                             {
@@ -979,11 +976,11 @@ namespace CBNSTT
                                 fcr.Close();
 
                                 tmp5.Add(tmp);
-                                offset += new_table[i].c_size;
+                                offset += (uint)new_table[i].c_size;
                             }
                             else
                             {
-                                offset += pad_size((int)fi[index].Length, 0x800);
+                                offset += (uint)pad_size((int)fi[index].Length, 0x800);
                                 new_table[i].block_offset = -1;
                                 new_table[i].compression_flag = -1;
 
@@ -1039,7 +1036,7 @@ namespace CBNSTT
             fs.Close();
             fr.Close();
 
-            head.name_offset = offset;
+            head.name_offset = (ulong)offset;
 
             for (int f = 0; f < head.file_table.Length; f++)
             {
@@ -1055,13 +1052,13 @@ namespace CBNSTT
                 }
             }
 
-            offset = pad_size(pad_size(56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count, 4) + 24, 0x800);
+            offset = (uint)pad_size(pad_size(56 + (4 * head.file_count) + (16 * head.file_count) + (head.big_chunks_count * 2) + head.small_chunks_count, 4) + 24, 0x800);
 
             for (int i = 0; i < new_table.Length; i++)
             {
                 new_table[i].offset += offset;
             }
-            head.name_offset += offset;
+            head.name_offset += (ulong)offset;
 
             if (File.Exists(output_path)) File.Delete(output_path);
 
@@ -1080,7 +1077,6 @@ namespace CBNSTT
             bw.Write(head.big_chunks_count);
             bw.Write(head.small_chunks_count);
             bw.Write(head.name_offset);
-            bw.Write(head.zero2);
             bw.Write(head.name_table_sz);
             bw.Write(head.one);
 
@@ -1144,7 +1140,7 @@ namespace CBNSTT
                 fr.Read(tmp, 0, tmp.Length);
                 bw.Write(tmp);
 
-                offset += tmp.Length;
+                offset += (uint)tmp.Length;
             }
 
             bw.Write(name_block);
