@@ -32,7 +32,7 @@
             this.TextEditBtn = new System.Windows.Forms.Button();
             this.TextureBtn = new System.Windows.Forms.Button();
             this.AboutBtn = new System.Windows.Forms.Button();
-            this.FontReplacerBtn = new System.Windows.Forms.Button();
+            this.SettingsBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // PackerBtn
@@ -79,22 +79,22 @@
             this.AboutBtn.UseVisualStyleBackColor = true;
             this.AboutBtn.Click += new System.EventHandler(this.AboutBtn_Click);
             // 
-            // FontReplacerBtn
+            // SettingsBtn
             // 
-            this.FontReplacerBtn.Location = new System.Drawing.Point(249, 75);
-            this.FontReplacerBtn.Name = "FontReplacerBtn";
-            this.FontReplacerBtn.Size = new System.Drawing.Size(141, 23);
-            this.FontReplacerBtn.TabIndex = 6;
-            this.FontReplacerBtn.Text = "Font Replacer";
-            this.FontReplacerBtn.UseVisualStyleBackColor = true;
-            this.FontReplacerBtn.Click += new System.EventHandler(this.FontReplacerBtn_Click);
+            this.SettingsBtn.Location = new System.Drawing.Point(249, 76);
+            this.SettingsBtn.Name = "SettingsBtn";
+            this.SettingsBtn.Size = new System.Drawing.Size(141, 23);
+            this.SettingsBtn.TabIndex = 6;
+            this.SettingsBtn.Text = "Settings";
+            this.SettingsBtn.UseVisualStyleBackColor = true;
+            this.SettingsBtn.Click += new System.EventHandler(this.SettingsBtn_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(432, 169);
-            this.Controls.Add(this.FontReplacerBtn);
+            this.Controls.Add(this.SettingsBtn);
             this.Controls.Add(this.AboutBtn);
             this.Controls.Add(this.TextureBtn);
             this.Controls.Add(this.TextEditBtn);
@@ -116,7 +116,7 @@
         private System.Windows.Forms.Button TextEditBtn;
         private System.Windows.Forms.Button TextureBtn;
         private System.Windows.Forms.Button AboutBtn;
-        private System.Windows.Forms.Button FontReplacerBtn;
+        private System.Windows.Forms.Button SettingsBtn;
     }
 }
 

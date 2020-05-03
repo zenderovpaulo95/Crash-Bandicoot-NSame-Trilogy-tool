@@ -18,6 +18,7 @@ namespace CBNSTT
         }
 
         public static char slash = System.IO.Path.DirectorySeparatorChar;
+        public static string filePath = null;
 
         //call form for work with pak files
         private void PackerBtn_Click(object sender, EventArgs e)
@@ -49,13 +50,23 @@ namespace CBNSTT
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
+            try
+            {
+                if(System.IO.File.Exists(AppDomain.CurrentDomain.BaseDirectory + slash + "config.txt"))
+                {
+                    filePath = System.IO.File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + slash + "config.txt");
+                }
+            }
+            catch
+            {
+                filePath = null;
+            }
         }
 
-        private void FontReplacerBtn_Click(object sender, EventArgs e)
+        private void SettingsBtn_Click(object sender, EventArgs e)
         {
-            FontReplacer font = new FontReplacer();
-            font.Show();
+            SettingsForm settings = new SettingsForm();
+            settings.Show();
         }
     }
 }

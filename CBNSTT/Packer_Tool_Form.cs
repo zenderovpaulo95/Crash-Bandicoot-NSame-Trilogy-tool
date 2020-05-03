@@ -389,6 +389,11 @@ namespace CBNSTT
                     if (!Directory.Exists(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir)) Directory.CreateDirectory(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir);
                     if (File.Exists(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + new_table[j].file_name)) File.Delete(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + new_table[j].file_name);
 
+                    if(new_table[j].file_name == "temporary\\mack\\data\\win64\\output\\textures\\Composite3,textures@!{default_b`png,levels!Crash1!crates!Crash_Crates_Metal_{G,M}`tga},111.igz")
+                    {
+                        int pause = 1;
+                    }
+
                     if (new_table[j].compression_flag != -1)
                     {
                         int size = 0;
@@ -444,6 +449,10 @@ namespace CBNSTT
                                 }
                                 else
                                 {
+                                    if(new_table[j].size < 0x40000)
+                                    {
+                                        def_block = 0x8000;
+                                    }
                                     br.BaseStream.Seek(offset, SeekOrigin.Begin);
                                     def_block = 0x8000;
 
