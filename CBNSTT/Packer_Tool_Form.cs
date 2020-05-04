@@ -389,11 +389,6 @@ namespace CBNSTT
                     if (!Directory.Exists(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir)) Directory.CreateDirectory(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + dir);
                     if (File.Exists(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + new_table[j].file_name)) File.Delete(dir_path + MainForm.slash.ToString() + pak_name + MainForm.slash.ToString() + new_table[j].file_name);
 
-                    if(new_table[j].file_name == "temporary\\mack\\data\\win64\\output\\textures\\Composite3,textures@!{default_b`png,levels!Crash1!crates!Crash_Crates_Metal_{G,M}`tga},111.igz")
-                    {
-                        int pause = 1;
-                    }
-
                     if (new_table[j].compression_flag != -1)
                     {
                         int size = 0;
@@ -1420,7 +1415,6 @@ namespace CBNSTT
 
         private void Packer_Tool_Form_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
         }
 
         private void UnpackBtn_Click(object sender, EventArgs e)
@@ -1482,6 +1476,7 @@ namespace CBNSTT
 
                             System.Threading.Tasks.Task.Factory.StartNew(() =>
                             {
+                                PO.CancellationToken.ThrowIfCancellationRequested();
                                 System.Threading.Tasks.Parallel.ForEach(fi, PO,
                                 file =>
                                 {
@@ -1492,6 +1487,8 @@ namespace CBNSTT
                                     SendProgress(count);
                                     count++;
                                 });
+
+                                MessageBox.Show("Done");
                             });
                         }
                         catch (OperationCanceledException ex)

@@ -107,13 +107,12 @@ namespace CBNSTT
         }
         private void ExportBtn_Click(object sender, EventArgs e)
         {
-            //try
-            //{
+            try
+            {
                 FileFolderDialog fbd = new FileFolderDialog();
 
                 if(fbd.ShowDialog() == DialogResult.OK)
                 {
-                    //bool UseTool = File.Exists(String.Format("{0}{1}PVRTexToolCLI", AppDomain.CurrentDomain.BaseDirectory, MainForm.slash));
                     bool UseTool = File.Exists(MainForm.filePath);
 
                     DirectoryInfo di = new DirectoryInfo(fbd.SelectedPath);
@@ -234,7 +233,6 @@ namespace CBNSTT
                                         tmp = BitConverter.GetBytes(size);
                                         Array.Copy(tmp, 0, header, header.Length - 4, tmp.Length);
 
-                                        //string pvr_path = fi[i].FullName.Remove(fi[i].FullName.Length - 3, 3) + "pvr";
                                         string pvr_path = fi[i].FullName.Remove(fi[i].FullName.Length - 3, 3) + "ktx";
 
                                         if (File.Exists(pvr_path)) File.Delete(pvr_path); //Чтобы прога из-за такой тупости не упала
@@ -249,12 +247,9 @@ namespace CBNSTT
                                             string path = GetFilePath(fi[i].FullName);
                                             string file_name = fi[i].Name;
 
-                                            //if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".pvr")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".pvr");
                                             if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".ktx")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".ktx");
 
-                                            //File.Delete(fi[i].FullName.Replace(".igz", ".pvr"));
-                                            File.Move(fi[i].FullName.Replace(".igz", ".ktx"), path + MainForm.slash + "tmp" + i.ToString() + ".ktx");
-                                            //File.Delete(fi[i].FullName.Replace(".igz", ".kxt"));
+                                            File.Move(fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4) + ".ktx", path + MainForm.slash + "tmp" + i.ToString() + ".ktx");
 
                                             arg = String.Format("-fd {0} \"{1}\" \"{2}\"", "ARGB_8888", path + MainForm.slash + "tmp" + i.ToString() + ".ktx", path + MainForm.slash + "tmp" + i.ToString() + ".png");
                                             
@@ -267,28 +262,23 @@ namespace CBNSTT
                                             exec.Start();
                                             exec.WaitForExit();
 
-                                            if (File.Exists(fi[i].FullName.Replace(".igz", ".png"))) File.Delete(fi[i].FullName.Replace(".igz", ".png"));
-                                            //if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".png")) File.Move(path + MainForm.slash + "tmp" + i.ToString() + ".png", fi[i].FullName.Replace(".igz", ".png"));
+                                            if (File.Exists(fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4) + ".png")) File.Delete(fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4) + ".png");
                                             if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".ktx")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".ktx");
 
-
-
-                                        //tmp = File.ReadAllBytes(fi[i].FullName.Replace(".igz", ".png"));
-                                        tmp = File.ReadAllBytes(path + MainForm.slash + "tmp" + i.ToString() + ".png");
-                                        //if (File.Exists(fi[i].FullName.Replace(".igz", ".png"))) File.Delete(fi[i].FullName.Replace(".igz", ".png"));
-                                        MemoryStream ms = new MemoryStream(tmp);
-                                        //Image img = Image.FromFile(fi[i].FullName.Replace(".igz", ".png"));
-                                        if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".png")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".png");
-                                        Image img = Image.FromStream(ms);
+                                            tmp = File.ReadAllBytes(path + MainForm.slash + "tmp" + i.ToString() + ".png");
+                                        
+                                            MemoryStream ms = new MemoryStream(tmp);
+                                            if (File.Exists(path + MainForm.slash + "tmp" + i.ToString() + ".png")) File.Delete(path + MainForm.slash + "tmp" + i.ToString() + ".png");
+                                            Image img = Image.FromStream(ms);
                                             img.RotateFlip(RotateFlipType.RotateNoneFlipY);
-                                            FileStream fws = new FileStream(fi[i].FullName.Replace(".igz", ".png"), FileMode.CreateNew);
+                                            FileStream fws = new FileStream(fi[i].FullName.Remove(fi[i].FullName.Length - 4, 4) + ".png", FileMode.CreateNew);
                                             img.Save(fws, System.Drawing.Imaging.ImageFormat.Png);
                                             fws.Close();
                                             img.Dispose();
                                             img = null;
                                             ms.Close();
                                         }
-                                        //else listBox1.Items.Add("File " + fi[i].Name + " successfully exported");
+
                                         listBox1.Items.Add("File " + fi[i].Name + " successfully exported");
 
                                         header = null;
@@ -302,28 +292,10 @@ namespace CBNSTT
                             br.Close();
                             fs.Close();
                         }
-
-                        /*if(UseTool && arg != "")
-                        {
-                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat" + "\"";
-                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat", arg, Encoding.GetEncoding(866));
-
-                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat\"";
-
-                            Process exec = new Process();
-
-                            ProcessStartInfo start_info = new ProcessStartInfo("CMD.EXE", argument);
-                            exec.StartInfo = start_info;
-                            exec.Start();
-                            exec.WaitForExit();
-
-                            listBox1.Items.Add("File(s) extracted and converted into png format");
-
-                        }*/
                     }
                     else listBox1.Items.Add("Not found igz files");
                 }
-            /*}
+            }
             catch(Exception ex)
             {
                 string error_str = ex.Data + "\t" + ex.Message + "\r\n";
@@ -333,7 +305,7 @@ namespace CBNSTT
                 File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "session_error.log", error_str);
 
                 listBox1.Items.Add("Произошла ошибка. Отчёт сохранён в файл " + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "season_error.log");
-            }*/
+            }
         }
 
         private void ImportBtn_Click(object sender, EventArgs e)
@@ -342,16 +314,14 @@ namespace CBNSTT
             {*/
             FileFolderDialog fbd = new FileFolderDialog();
 
-            // fbd.ShowNewFolderButton = false;
-
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    bool UseTool = File.Exists(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "PVRTexToolCLI");
+                //bool UseTool = File.Exists(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "PVRTexToolCLI");
+                bool UseTool = File.Exists(MainForm.filePath);
 
-                    DirectoryInfo di = new DirectoryInfo(fbd.SelectedPath);
+                DirectoryInfo di = new DirectoryInfo(fbd.SelectedPath);
                     FileInfo[] fi = di.GetFiles("*.igz");
                     FileInfo[] pngfi = di.GetFiles("*.png");
-                //FileInfo[] pvrfi = di.GetFiles("*.pvr");
                     FileInfo[] pvrfi = di.GetFiles("*.ktx");
                     FileInfo[] importfi = pvrfi;
 
@@ -361,6 +331,7 @@ namespace CBNSTT
                         {
                             importfi = pngfi;
                         }
+                        else UseTool = false;
                     }
                     else if(fi.Length > 0 && fi.Length == pngfi.Length && fi.Length != pvrfi.Length)
                     {
@@ -369,12 +340,13 @@ namespace CBNSTT
                     else if(fi.Length > 0 && fi.Length == pngfi.Length && fi.Length != pvrfi.Length)
                     {
                         importfi = pvrfi;
+                        UseTool = false;
                     }
 
                     if (!UseTool && importfi[0].Extension == ".png")
                     {
                         listBox1.Items.Add("Need a AMD compressonator for convert png files into ktx!");
-                        goto fail;
+                        return;
                     }
 
                 for (int o = 0; o < importfi.Length; o++)
@@ -410,21 +382,65 @@ namespace CBNSTT
                                 if (sizes[1] == 0xC0)
                                 {
 
-                                    br.BaseStream.Seek(offsets[0] + 8, SeekOrigin.Begin);
+                                    br.BaseStream.Seek(offsets[0], SeekOrigin.Begin);
 
-                                    int offset = 0;
+                                    int offset = offsets[0];
 
-                                    for (int j = 0; j < 3; j++)
+                                    byte[] check = null;
+
+                                    while (offset < offsets[1])
                                     {
-                                        offset = br.ReadInt32();
-                                        br.BaseStream.Seek(offset - 4, SeekOrigin.Current);
+                                        if (offset >= offsets[1])
+                                        {
+                                            listBox1.Items.Add("This is not a texture file");
+                                            goto fail;
+                                        }
+                                        check = br.ReadBytes(4);
+                                        if (Encoding.ASCII.GetString(check) == "EXID") break;
+                                        offset += 8;
+                                        br.BaseStream.Seek(4, SeekOrigin.Current);
+                                        check = br.ReadBytes(4);
+                                        offset += BitConverter.ToInt32(check, 0) - 8;
+                                        br.BaseStream.Seek(BitConverter.ToInt32(check, 0) - 12, SeekOrigin.Current);
                                     }
 
-                                    br.BaseStream.Seek(8, SeekOrigin.Current);
+                                    br.BaseStream.Seek(4, SeekOrigin.Current);
+                                    int size = br.ReadInt32();
+                                    size -= 16;
+                                    br.BaseStream.Seek(4, SeekOrigin.Current);
+                                    byte[] block = br.ReadBytes(size);
+                                    offset = 0;
 
-                                    byte[] code = br.ReadBytes(4);
+                                    byte[] code = null;
 
                                     int index = -1;
+                                    bool found = false;
+
+                                    while (offset < block.Length)
+                                    {
+                                        if (offset >= block.Length)
+                                        {
+                                            listBox1.Items.Add("This is not a texture file");
+                                            goto fail;
+                                        }
+
+                                        code = new byte[4];
+                                        Array.Copy(block, offset, code, 0, code.Length);
+                                        
+                                        for(int a = 0; a < check_format.Count; a++)
+                                        {
+                                            if(BitConverter.ToString(code) == BitConverter.ToString(check_format[a].code))
+                                            {
+                                                index = a;
+                                                found = true;
+                                                break;
+                                            }
+                                        }
+
+                                        offset++;
+
+                                        if (found) break;
+                                    }
 
                                     br.BaseStream.Seek(offsets[1] + 0x48, SeekOrigin.Begin);
                                     short width = br.ReadInt16();
@@ -435,70 +451,42 @@ namespace CBNSTT
 
                                     if (faces == 1 && ar_mem == 1)
                                     {
-                                        int tmp_width = width;
-                                        int tmp_height = height;
-
-                                        br.BaseStream.Seek(22, SeekOrigin.Current);
-
-                                        int size = br.ReadInt32();
-
-                                        int r8g8b8a8_offset = 0, dxt1_offset = 0, dxt5_offset = 0;
-
-                                        for (int m = 0; m < mips; m++)
-                                        {
-                                            r8g8b8a8_offset += (tmp_width * tmp_height * 4);
-                                            dxt1_offset += ((tmp_width * tmp_height) / 2);
-                                            dxt5_offset += (tmp_width * tmp_height);
-
-                                            //if(tmp_width / 2)
-                                            tmp_width /= 2;
-                                            tmp_height /= 2;
-
-                                            if (tmp_width == 0) tmp_width = 1;
-                                            if (tmp_height == 0) tmp_height = 1;
-                                        }
-
-                                        if (r8g8b8a8_offset == size) index = 0;
-                                        if (dxt1_offset == size) index = 1;
-                                        if (dxt5_offset == size) index = 2;
-
                                         if (index != -1)
                                         {
                                             //br.BaseStream.Seek(offsets[2], SeekOrigin.Begin);
 
-
+                                            string mod_file = importfi[o].FullName;
                                             if (UseTool)
                                             {
                                                 string tmp_path = importfi[o].DirectoryName + MainForm.slash + "tmp" + o + ".png";
                                                 if (File.Exists(tmp_path)) File.Delete(tmp_path);
-                                                File.Move(importfi[o].FullName, tmp_path);
+                                                File.Copy(importfi[o].FullName, tmp_path);
 
-                                                string kxt_format = null;
+                                                byte[] png_tmp = File.ReadAllBytes(tmp_path);
+                                                MemoryStream ms = new MemoryStream(png_tmp);
+                                                Image img = Image.FromStream(ms);
+                                                img.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                                                if (File.Exists(tmp_path)) File.Delete(tmp_path);
+                                                FileStream fws = new FileStream(tmp_path, FileMode.CreateNew);
+                                                img.Save(fws, System.Drawing.Imaging.ImageFormat.Png);
+                                                fws.Close();
+                                                ms.Close();
+                                                img.Dispose();
+                                                img = null;
 
-                                                if (kxt_format != null)
-                                                {
-                                                    Process exec = new Process();
+                                                Process exec = new Process();
 
-                                                    string argument = String.Format("-fd {0} -miplevels {1} \"{2}\" \"{3}\"", check_format[index].format, mips - 1, tmp_path, tmp_path.Replace(".png", ".ktx"));
-                                                    ProcessStartInfo start_info = new ProcessStartInfo(MainForm.filePath, argument);
-                                                    exec.StartInfo = start_info;
-                                                    exec.Start();
-                                                    exec.WaitForExit();
+                                                string argument = String.Format("-fd {0} -miplevels {1} \"{2}\" \"{3}\"", check_format[index].format, mips - 1, tmp_path, tmp_path.Remove(tmp_path.Length - 4, 4) + ".ktx");
+                                                ProcessStartInfo start_info = new ProcessStartInfo(MainForm.filePath, argument);
+                                                start_info.WindowStyle = ProcessWindowStyle.Minimized;
+                                                exec.StartInfo = start_info;
+                                                exec.Start();
+                                                exec.WaitForExit();
 
-                                                    if (File.Exists(tmp_path.Replace(".png", ".ktx"))) File.Move(tmp_path.Replace(".png", ".ktx"), importfi[o].FullName.ToLower().Replace(".png", ".ktx"));
-                                                }
-                                                #region another junk
-                                                //string path = GetFilePath(new_file_path);
-                                                //string file_name = GetFileName(new_file_path);
-                                                /*string tmp = importfi[i].DirectoryName + MainForm.slash + "tmp" + i + ".png";
-                                                if (File.Exists(tmp)) File.Delete(tmp);
-                                                File.Move(importfi[i].FullName, tmp);
-
-                                                arg += "\"" + AppDomain.CurrentDomain.BaseDirectory + "PVRTexToolCLI\" -i \"" + tmp + "\" -o \"" + tmp.Replace(".png", ".pvr") + "\" -flip y -f " + check_format[index].format + ",UBN,lRGB -m " + mips.ToString() + "\r\n";
-                                                arg += "if exist \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".Out.pvr\" del \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".Out.pvr\"\r\n";
-                                                arg += "ren \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".png\" \"" + fi[i].Name.Replace(".igz", ".png") + "\"\r\n";
-                                                arg += "ren \"" + fi[i].Directory + MainForm.slash + "tmp" + i + ".pvr\" \"" + fi[i].Name.Replace(".igz", ".pvr") + "\"\r\n";*/
-                                                #endregion
+                                                if (File.Exists(tmp_path)) File.Delete(tmp_path);
+                                                if (File.Exists(importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) + ".ktx")) File.Delete(importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) + ".ktx");
+                                                mod_file = importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) + ".ktx";
+                                                if (File.Exists(tmp_path.Remove(tmp_path.Length - 4, 4) + ".ktx")) File.Move(tmp_path.Remove(tmp_path.Length - 4, 4) + ".ktx", mod_file);
                                             }
                                             //else
                                             //{
@@ -529,7 +517,7 @@ namespace CBNSTT
                                             }*/
                                             #endregion
 
-                                            byte[] kxt_tex = File.ReadAllBytes(importfi[o].FullName);
+                                                byte[] kxt_tex = File.ReadAllBytes(mod_file);
                                                 byte[] tmp = new byte[4];
                                                 Array.Copy(kxt_tex, 28, tmp, 0, tmp.Length);
 
@@ -564,13 +552,12 @@ namespace CBNSTT
                                                     Array.Copy(kxt_tex, 48, tmp, 0, tmp.Length);
 
                                                     int offs = 52 + BitConverter.ToInt32(tmp, 0);*/
-                                                    int offs = 0x44;
+                                                    int offs = 0x40;
 
-                                                    if (size == kxt_tex.Length - offs)
+                                                    if (sizes[2] == kxt_tex.Length - offs - (4 * mips))
                                                     {
                                                         br.BaseStream.Seek(0, SeekOrigin.Begin);
                                                         tmp = br.ReadBytes(offsets[2]);
-
                                                         br.Close();
                                                         fs.Close();
 
@@ -581,18 +568,30 @@ namespace CBNSTT
                                                         FileStream fw = new FileStream(fi[i].FullName, FileMode.CreateNew);
                                                         fw.Write(tmp, 0, tmp.Length);
 
+                                                        offset = 0x40; //offset to size block;
+
+                                                    for (int m = 0; m < mips; m++)
+                                                    {
+                                                        tmp = new byte[4];
+                                                        Array.Copy(kxt_tex, offset, tmp, 0, tmp.Length);
+                                                        offset += 4;
+
+                                                        size = BitConverter.ToInt32(tmp, 0);
                                                         tmp = new byte[size];
-                                                        Array.Copy(kxt_tex, offs, tmp, 0, tmp.Length);
+                                                        Array.Copy(kxt_tex, offset, tmp, 0, tmp.Length);
+                                                        offset += size;
+
                                                         fw.Write(tmp, 0, tmp.Length);
+                                                    }
                                                         tmp = null;
 
                                                         listBox1.Items.Add("File " + fi[i].Name + " successfully imported!");
 
-                                                    if (File.Exists(importfi[o].FullName.ToLower().Replace(".png", ".ktx"))) File.Delete(importfi[o].FullName.ToLower().Replace(".png", ".ktx"));
+                                                    if (File.Exists(importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) + ".ktx")) File.Delete(importfi[o].FullName.Remove(importfi[o].FullName.Length - 4, 4) + ".ktx");
                                                 }
                                                     else listBox1.Items.Add("Something wrong. I'll check later.");
                                                 }
-                                                else listBox1.Items.Add("Unknown PVR file format. Please send me for research.");
+                                                else listBox1.Items.Add("Unknown KTX file format. Please send me for research.");
                                             //}
                                         }
                                         else listBox1.Items.Add("Please send me this file: " + fi[i].Name + ". It needs check for correctly file format.");
@@ -601,93 +600,13 @@ namespace CBNSTT
                                 }
                                 else listBox1.Items.Add("Unknown format. Please send me file " + fi[i].Name);
 
+                                fail:
                                 if (br != null) br.Close();
                                 if (fs != null) fs.Close();
                             }
                         }
                     }
                 }
-
-                        /*if (UseTool && arg != "")
-                        {
-                            arg += "del \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat" + "\"";
-                            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat", arg, Encoding.GetEncoding(866));
-
-                            string argument = "/c \"" + AppDomain.CurrentDomain.BaseDirectory + MainForm.slash + "batnik.bat\"";
-
-                            Process exec = new Process();
-
-                            ProcessStartInfo start_info = new ProcessStartInfo("CMD.EXE", argument);
-                            exec.StartInfo = start_info;
-                            exec.Start();
-                            exec.WaitForExit();
-
-                        listBox1.Items.Add("Convertion complete. Replacing textures in igz files...");
-
-                        for(int i = 0; i < fi.Length; i++)
-                        {
-                        //System.Threading.Thread.Sleep(1000);
-                        string path = fi[i].FullName.Replace(".igz", ".pvr");
-
-                            FileStream fs = new FileStream(fi[i].FullName, FileMode.Open);
-                            BinaryReader br = new BinaryReader(fs);
-
-                            byte[] header = br.ReadBytes(4);
-
-                                br.BaseStream.Seek(24, SeekOrigin.Begin);
-
-                                int[] offsets = new int[3];
-                                int[] sizes = new int[3];
-
-                                for (int j = 0; j < 3; j++)
-                                {
-                                    offsets[j] = br.ReadInt32();
-                                    sizes[j] = br.ReadInt32();
-                                    br.BaseStream.Seek(8, SeekOrigin.Current);
-                                }
-
-                                    br.BaseStream.Seek(0, SeekOrigin.Begin);
-                                    byte[] tmp = br.ReadBytes(offsets[2]);
-
-                            br.Close();
-                            fs.Close();
-
-                            if (File.Exists(fi[i].FullName)) File.Delete(fi[i].FullName);
-
-                        if (File.Exists(path))
-                        {
-
-                            FileStream fw = new FileStream(fi[i].FullName, FileMode.CreateNew);
-                            fw.Write(tmp, 0, tmp.Length);
-
-                            byte[] pvr_tex = File.ReadAllBytes(path);
-                            tmp = new byte[8];
-                            Array.Copy(pvr_tex, 8, tmp, 0, tmp.Length);
-
-                            tmp = new byte[4];
-
-                            Array.Copy(pvr_tex, 48, tmp, 0, tmp.Length);
-
-                            int offs = 52 + BitConverter.ToInt32(tmp, 0);
-
-                            br.BaseStream.Seek(0, SeekOrigin.Begin);
-                            tmp = br.ReadBytes(offsets[2]);
-
-                            tmp = new byte[pvr_tex.Length - offs];
-                            Array.Copy(pvr_tex, offs, tmp, 0, tmp.Length);
-                            fw.Write(tmp, 0, tmp.Length);
-                            tmp = null;
-
-                            fw.Close();
-                            File.Delete(path);
-                            listBox1.Items.Add("File " + fi[i].Name + " successfully imported.");
-                        }
-                        else listBox1.Items.Add("File " + fi[i].Name + " didn't imported because pvr file doesn't exist.");
-                        }
-
-                        }*/
-                    fail:
-                    int error = -1;
                 }
             /*}
             catch(Exception ex)
