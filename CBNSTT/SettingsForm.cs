@@ -42,6 +42,8 @@ namespace CBNSTT
                 && (System.IO.File.Exists(path)))
             {
                 System.IO.File.WriteAllText(MainForm.filePath, path, Encoding.UTF8);
+                MainForm.filePath = path;
+                //System.IO.File.WriteAllText(path, MainForm.filePath, Encoding.UTF8);
             }
 
             Close();
