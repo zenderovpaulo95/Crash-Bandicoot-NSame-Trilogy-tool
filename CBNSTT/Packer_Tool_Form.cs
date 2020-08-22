@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace CBNSTT
 {
@@ -169,7 +170,7 @@ namespace CBNSTT
         }
 
         //Unpack archive function (tested for Nintendo Switch version)
-        public string UnpackArchive(string input_path, string dir_path)
+        public string UnpackArchive(string input_path, string dir_path, bool one_arc)
         {
             int num = -1;
             if (!Directory.Exists(dir_path)) return "Directory not found. Please select another extract directory path.";
@@ -382,6 +383,11 @@ namespace CBNSTT
                 string pak_name = get_file_name(input_path);
                 pak_name = pak_name.Remove(pak_name.IndexOf('.'), pak_name.Length - pak_name.IndexOf('.'));
 
+                if(one_arc)
+                {
+                    InitProgressBar(new_table.Length);
+                }
+
                 for (int j = 0; j < new_table.Length; j++)
                 {
                     string dir = get_dir_path(new_table[j].file_name);
@@ -444,10 +450,10 @@ namespace CBNSTT
                                 }
                                 else
                                 {
-                                    if(new_table[j].size < 0x40000)
+                                    /*if(new_table[j].size < 0x40000)
                                     {
                                         def_block = 0x8000;
-                                    }
+                                    }*/
                                     br.BaseStream.Seek(offset, SeekOrigin.Begin);
                                     def_block = 0x8000;
 
@@ -478,6 +484,12 @@ namespace CBNSTT
                         fw.Close();
                         content = null;
                     }
+
+                    if(one_arc)
+                    {
+                        SendMessage("Unpacked " + new_table[j].file_name);
+                        SendProgress(j);
+                    }
                 }
 
                 new_table = null;
@@ -500,7 +512,7 @@ namespace CBNSTT
             }
         }
 
-        public string RepackArchive(string input_path, string output_path, string dir_path, bool compress)
+        public string RepackArchive(string input_path, string output_path, string dir_path, bool compress, bool one_arc)
         {
             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
 
@@ -539,7 +551,7 @@ namespace CBNSTT
                 fr.Close();
                 File.Delete(output_path + ".tmp");
 
-                return "Count of files in directory and archives don't fit. It must be " + head.file_count + "but found " + fi.Length + " files.";
+                return "Count of files in directory and archives don't fit. It must be " + head.file_count + " but found " + fi.Length + " files.";
             }
 
             head.chunks_sz = br.ReadInt32();
@@ -750,6 +762,12 @@ namespace CBNSTT
             List<byte[]> tmp5 = new List<byte[]>();
             int c_offset = 0; //Table's offset big data
             int c_offset_small = 0; //Table's offset small data
+
+            if (one_arc)
+            {
+                InitProgressBar(new_table.Length);
+                SendMessage("Total files: " + new_table.Length);
+            }
 
             for (int i = 0; i < new_table.Length; i++)
             {
@@ -1033,6 +1051,12 @@ namespace CBNSTT
                         return "File name path's length more than 255 symbols. Please trim it for correctly work.";
                     }
                 }
+
+                if(one_arc)
+                {
+                    SendMessage((i + 1) + ". Repacked file " + new_table[i].file_name);
+                    SendProgress(i);
+                }
             }
 
             bw.Close();
@@ -1136,8 +1160,9 @@ namespace CBNSTT
 
             offset = 0;
 
-            while (offset != fr.Length)
+            while (offset < fr.Length)
             {
+                if (offset >= fr.Length) break;
                 tmp = new byte[0x10000]; //just in case I uses buffer with 64KB
                 if (tmp.Length > fr.Length - offset) tmp = new byte[fr.Length - offset];
 
@@ -1233,9 +1258,14 @@ namespace CBNSTT
                         }
                     }
 
-                    result = RepackArchive(pak_path, output_path, dir_path, false);
+                    Thread task = new Thread(() =>
+                    {
+                        result = RepackArchive(pak_path, output_path, dir_path, false, true);
 
-                    MessageBox.Show(result);
+                        MessageBox.Show(result);
+                    });
+
+                    task.Start();
                 }
             }
             else
@@ -1279,7 +1309,7 @@ namespace CBNSTT
                                    if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                    {
 
-                                       result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], false);
+                                       result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], false, false);
                                        SendMessage(result);
                                    }
                                });
@@ -1325,9 +1355,13 @@ namespace CBNSTT
                         }
                     }
 
-                    result = RepackArchive(pak_path, output_path, dir_path, true);
+                    System.Threading.Tasks.Task.Factory.StartNew(() =>
+                    {
+                        result = RepackArchive(pak_path, output_path, dir_path, true, true);
 
-                    MessageBox.Show(result);
+                        MessageBox.Show(result);
+                    }
+                    );
                 }
             }
             else
@@ -1369,7 +1403,7 @@ namespace CBNSTT
                                if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                {
 
-                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], true);
+                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], true, false);
                                    SendMessage(result);
                                }
                            });
@@ -1379,8 +1413,24 @@ namespace CBNSTT
                            }));
                     }
                     else listBox1.Items.Add("Please check pak files or rebuild's folders.");
-
                 }
+            }
+        }
+
+        public void InitProgressBar(int files)
+        {
+            if (progressBar1.InvokeRequired)
+            {
+                progressBar1.Invoke((Action)delegate {
+                    progressBar1.Minimum = 0;
+                    progressBar1.Maximum = files - 1;
+                });
+                Thread.Sleep(500);
+            }
+            else
+            {
+                progressBar1.Minimum = 0;
+                progressBar1.Maximum = files - 1;
             }
         }
 
@@ -1388,7 +1438,11 @@ namespace CBNSTT
         {
             if (listBox1.InvokeRequired)
             {
-                listBox1.Invoke(new SendMessage(SendMessage), message);
+                listBox1.Invoke((Action)delegate {
+                    listBox1.Items.Add(message);
+                    listBox1.SelectedIndex = listBox1.Items.Count - 1;
+                });
+                //listBox1.Invoke(new SendMessage(SendMessage), message);
                 //this.Invoke(new Action(() => listBox1.Items.Add(message)));
                 Thread.Sleep(500);
             }
@@ -1442,9 +1496,12 @@ namespace CBNSTT
                         }
                     }
 
-                    result = UnpackArchive(pak_path, dir_path);
+                    System.Threading.Tasks.Task.Factory.StartNew(() =>
+                    {
+                        result = UnpackArchive(pak_path, dir_path, true);
 
-                    MessageBox.Show(result);
+                        MessageBox.Show(result);
+                    });
                 }
             }
             else
@@ -1481,7 +1538,7 @@ namespace CBNSTT
                                 file =>
                                 {
                                     //TODO: Read about cancel Parallel.For loop (CancellationTokenSource): https://docs.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-parallel-for-or-foreach-loop 
-                                    result = UnpackArchive(file.FullName, dir_path);
+                                    result = UnpackArchive(file.FullName, dir_path, false);
 
                                     SendMessage(result);
                                     SendProgress(count);
