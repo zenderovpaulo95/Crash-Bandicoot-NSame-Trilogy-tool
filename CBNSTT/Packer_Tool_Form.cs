@@ -123,6 +123,21 @@ namespace CBNSTT
             return size;
         }
 
+        //padding for big files
+        ulong pad_size64(ulong size, ulong chunks)
+        {
+            if (size % chunks != 0)
+            {
+                while (size % chunks != 0)
+                {
+                    if (size % chunks == 0) break;
+                    size++;
+                }
+            }
+
+            return size;
+        }
+
         //Resort file table function
         public static void ResortTable(ref table[] table_resort)
         {
@@ -374,6 +389,28 @@ namespace CBNSTT
                     new_table[i].big_chunks_data = head.file_table[i].big_chunks_data;
                     new_table[i].small_chunks_data = head.file_table[i].small_chunks_data;
                 }
+
+                /*bool debug = true;
+
+                if(debug)
+                {
+                    ResortTable(ref new_table);
+                    string debug_str = "";
+
+                    for(int i = 0; i < new_table.Length; i++)
+                    {
+                        debug_str += "offset: " + new_table[i].offset.ToString("X8") + "\tfile size: " + new_table[i].size + "\tfile name: " + new_table[i].file_name;
+                        debug_str += "\r\n";
+                    }
+
+                    if (debug_str != "") File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + Path.DirectorySeparatorChar + "debug.txt", debug_str);
+                    debug_str = "";
+
+                    br.Close();
+                    fr.Close();
+
+                    return "Debug mode. Just check table. File saved in " + AppDomain.CurrentDomain.BaseDirectory + Path.DirectorySeparatorChar + "debug.txt";
+                }*/
 
                 byte[] content;
                 int ch_size;
@@ -769,6 +806,34 @@ namespace CBNSTT
                 SendMessage("Total files: " + new_table.Length);
             }
 
+            if(!compress) //checking for archive size
+            {
+                ulong check_offset = 0;
+
+                for(int i = 0; i < fi.Length; i++)
+                {
+                    check_offset += (ulong)fi[i].Length;
+                }
+
+                if (check_offset >= 0x100000000)
+                {
+                    bw.Close();
+                    br.Close();
+                    fs.Close();
+                    fr.Close();
+
+                    new_table = null;
+                    head.Dispose();
+
+                    tmp4.Clear();
+                    tmp5.Clear();
+
+                    GC.Collect();
+
+                    return "Your archive will be too big. It won't be support by game.";
+                }
+            }
+
             for (int i = 0; i < new_table.Length; i++)
             {
                 index = 0;
@@ -1158,7 +1223,23 @@ namespace CBNSTT
             bw.Write(head.unknown_data);
             bw.Write(tmp);
 
-            offset = 0;
+            ulong b_size = (ulong)fr.Length;
+            ulong p_count = pad_size64(b_size, 0x10000) / 0x10000;
+
+            ulong f_offset = 0;
+
+            for(ulong c = 0; c < p_count; c++)
+            {
+                tmp = new byte[0x10000]; //just in case I uses buffer with 64KB
+                if ((ulong)tmp.Length > b_size - f_offset) tmp = new byte[b_size - f_offset];
+
+                fr.Read(tmp, 0, tmp.Length);
+                bw.Write(tmp);
+
+                f_offset += (uint)tmp.Length;
+            }
+
+            /*offset = 0;
 
             while (offset < fr.Length)
             {
@@ -1170,7 +1251,7 @@ namespace CBNSTT
                 bw.Write(tmp);
 
                 offset += (uint)tmp.Length;
-            }
+            }*/
 
             bw.Write(name_block);
 
