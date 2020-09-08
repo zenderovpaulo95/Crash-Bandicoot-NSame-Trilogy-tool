@@ -119,14 +119,20 @@
   </resheader>
   <data name="aboutRichTextBox.Text" xml:space="preserve">
     <value>This tool for translating game Crash Bandicoot N.Same Triology.
-It can modify text files, change some textures (PVRTexToolCLI.exe will be needed),
-extract and repack archives.
+It can modify text files, change some textures (AMDcompressonator.exe will be needed
+but you can try use PVRTexTool for *.ktx files), extract and repack archives.
 
 If somebody made a full reasearch of fonts, you can help me with explaining or
 you can modify my code on GitHub:
 https://github.com/pashok6798/Crash-Bandicoot-NSAMETRIOLOGY-Tool
 
 Thanks to SileNTViP and NeoKesha for helping with making this tool.
+
+
+Version 1.2:
+- Minor fixes in packer tool
+- Changed tool for converting textures PVRTexTool to AMDCompressonator.
+You can set AMDCompressonator's executable path (Windows only. I don't know how to make it in Linux).
 
 Version 1.1:
 - Added support Crash Bandicoot: Nitro-Fueled (experimental).
