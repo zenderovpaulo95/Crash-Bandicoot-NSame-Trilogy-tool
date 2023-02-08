@@ -549,7 +549,7 @@ namespace CBNSTT
             }
         }
 
-        public string RepackArchive(string input_path, string output_path, string dir_path, bool compress, bool one_arc)
+        public string RepackArchive(string input_path, string output_path, string dir_path, bool compress, bool one_arc, bool checkBigArc)
         {
             if (File.Exists(output_path + ".tmp")) File.Delete(output_path + ".tmp");
 
@@ -815,7 +815,7 @@ namespace CBNSTT
                     check_offset += (ulong)fi[i].Length;
                 }
 
-                if (check_offset >= 0x100000000)
+                if ((check_offset >= 0x100000000) && checkBigArc)
                 {
                     bw.Close();
                     br.Close();
@@ -1317,6 +1317,7 @@ namespace CBNSTT
         private void saveBtn_Click(object sender, EventArgs e)
         {
             bool save_modal = checkBox1.Checked;
+            bool checkBigArchive = checkBox2.Checked;
 
             string output_path = textBox1.Text;
 
@@ -1341,7 +1342,7 @@ namespace CBNSTT
 
                     Thread task = new Thread(() =>
                     {
-                        result = RepackArchive(pak_path, output_path, dir_path, false, true);
+                        result = RepackArchive(pak_path, output_path, dir_path, false, true, checkBigArchive);
 
                         MessageBox.Show(result);
                     });
@@ -1390,7 +1391,7 @@ namespace CBNSTT
                                    if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                    {
 
-                                       result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], false, false);
+                                       result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], false, false, checkBigArchive);
                                        SendMessage(result);
                                    }
                                });
@@ -1415,6 +1416,8 @@ namespace CBNSTT
         {
             bool save_modal = checkBox1.Checked;
 
+            bool checkBigArchive = checkBox2.Checked;
+
             string output_path = textBox1.Text;
 
             string pak_path = textBox1.Text;
@@ -1438,7 +1441,7 @@ namespace CBNSTT
 
                     System.Threading.Tasks.Task.Factory.StartNew(() =>
                     {
-                        result = RepackArchive(pak_path, output_path, dir_path, true, true);
+                        result = RepackArchive(pak_path, output_path, dir_path, true, true, checkBigArchive);
 
                         MessageBox.Show(result);
                     }
@@ -1484,7 +1487,7 @@ namespace CBNSTT
                                if (fi[i].Name.Contains(check) && check.Length == fi[i].Name.Length - 4)
                                {
 
-                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], true, false);
+                                   result = RepackArchive(fi[i].FullName, output_path + MainForm.slash + fi[i].Name, dirs[j], true, false, checkBigArchive);
                                    SendMessage(result);
                                }
                            });

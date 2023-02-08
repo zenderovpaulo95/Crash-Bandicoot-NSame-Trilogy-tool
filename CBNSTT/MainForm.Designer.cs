@@ -37,10 +37,10 @@
             // 
             // PackerBtn
             // 
-            this.PackerBtn.Location = new System.Drawing.Point(43, 31);
-            this.PackerBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.PackerBtn.Location = new System.Drawing.Point(32, 25);
+            this.PackerBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PackerBtn.Name = "PackerBtn";
-            this.PackerBtn.Size = new System.Drawing.Size(139, 23);
+            this.PackerBtn.Size = new System.Drawing.Size(104, 23);
             this.PackerBtn.TabIndex = 0;
             this.PackerBtn.Text = "Packer tool";
             this.PackerBtn.UseVisualStyleBackColor = true;
@@ -48,10 +48,10 @@
             // 
             // TextEditBtn
             // 
-            this.TextEditBtn.Location = new System.Drawing.Point(43, 76);
-            this.TextEditBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.TextEditBtn.Location = new System.Drawing.Point(32, 62);
+            this.TextEditBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.TextEditBtn.Name = "TextEditBtn";
-            this.TextEditBtn.Size = new System.Drawing.Size(141, 23);
+            this.TextEditBtn.Size = new System.Drawing.Size(106, 23);
             this.TextEditBtn.TabIndex = 1;
             this.TextEditBtn.Text = "Text Editor";
             this.TextEditBtn.UseVisualStyleBackColor = true;
@@ -59,10 +59,10 @@
             // 
             // TextureBtn
             // 
-            this.TextureBtn.Location = new System.Drawing.Point(249, 31);
-            this.TextureBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.TextureBtn.Location = new System.Drawing.Point(187, 25);
+            this.TextureBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.TextureBtn.Name = "TextureBtn";
-            this.TextureBtn.Size = new System.Drawing.Size(141, 23);
+            this.TextureBtn.Size = new System.Drawing.Size(106, 23);
             this.TextureBtn.TabIndex = 3;
             this.TextureBtn.Text = "Texture Tool";
             this.TextureBtn.UseVisualStyleBackColor = true;
@@ -70,10 +70,10 @@
             // 
             // AboutBtn
             // 
-            this.AboutBtn.Location = new System.Drawing.Point(160, 124);
-            this.AboutBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.AboutBtn.Location = new System.Drawing.Point(120, 101);
+            this.AboutBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.AboutBtn.Name = "AboutBtn";
-            this.AboutBtn.Size = new System.Drawing.Size(108, 23);
+            this.AboutBtn.Size = new System.Drawing.Size(81, 23);
             this.AboutBtn.TabIndex = 5;
             this.AboutBtn.Text = "About";
             this.AboutBtn.UseVisualStyleBackColor = true;
@@ -81,9 +81,10 @@
             // 
             // SettingsBtn
             // 
-            this.SettingsBtn.Location = new System.Drawing.Point(249, 76);
+            this.SettingsBtn.Location = new System.Drawing.Point(187, 62);
+            this.SettingsBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.SettingsBtn.Name = "SettingsBtn";
-            this.SettingsBtn.Size = new System.Drawing.Size(141, 23);
+            this.SettingsBtn.Size = new System.Drawing.Size(106, 23);
             this.SettingsBtn.TabIndex = 6;
             this.SettingsBtn.Text = "Settings";
             this.SettingsBtn.UseVisualStyleBackColor = true;
@@ -91,16 +92,16 @@
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(432, 169);
+            this.ClientSize = new System.Drawing.Size(324, 137);
             this.Controls.Add(this.SettingsBtn);
             this.Controls.Add(this.AboutBtn);
             this.Controls.Add(this.TextureBtn);
             this.Controls.Add(this.TextEditBtn);
             this.Controls.Add(this.PackerBtn);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MainForm";
